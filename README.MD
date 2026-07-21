@@ -20,11 +20,13 @@ Stori Zetu addresses these by centralizing stock and order data, so it's accurat
 - Real-time stock status (in stock / pre-order / out of stock)
 - Notify-me alerts for restocks
 - Favorites
+- Choice of pickup or delivery at checkout, with delivery address and fee
 ### Admin-Facing
 - Stock management (add, edit, adjust)
 - Manual sale logging (for social-media-driven sales, kept in sync with website stock)
 - Book listing and categorization
 - Book traffic / basic analytics
+- Delivery status tracking (mark orders as dispatched / delivered)
 ## Tech Stack
  
 | Layer | Technology |
@@ -92,6 +94,7 @@ POST   /api/admin/categories/
 PATCH  /api/admin/categories/:id/
 DELETE /api/admin/categories/:id/
 GET    /api/admin/analytics/
+PATCH  /api/admin/orders/:id/delivery-status/
 ```
  
 ## Setup Instructions
@@ -135,3 +138,4 @@ MPESA_CONSUMER_SECRET=
 | Sales split across social media and website | Admin manual-sale-logging tool feeding the same stock pool |
 | Pre-orders indistinguishable from in-stock items | Dedicated status field on each book |
 | Overselling risk during simultaneous checkouts | Atomic stock decrement at the database level |
+| Deliveries handled via courier with no visibility on the platform | In-house delivery tracking — order carries delivery method, address, fee, and status (pending / dispatched / delivered), managed by admin |
