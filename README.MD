@@ -152,9 +152,31 @@ MPESA_CONSUMER_SECRET=
 *(To be added)*
 
 ## Contributing
+ 
+Contributions are welcome. If you'd like to contribute or suggest something, feel free to open an issue first so it can be discussed.
+ 
+1. Fork the repository
+2. Clone your fork locally:
+```bash
+   git clone https://github.com/<your-username>/BookStore.git
+```
+3. Install dependencies (see Setup Instructions above)
+4. Create a new branch for your feature:
+```bash
+   git checkout -b feature/your-feature
+```
+5. Make your changes and commit:
+```bash
+   git commit -m "Add your feature"
+```
+6. Push to your branch:
+```bash
+   git push origin feature/your-feature
+```
+7. Open a pull request on the original repository
 
-Anyone who wants to contribute to this project is welcome to open an issue and clone the repository:
 
+Original repo:
 ```bash
 git clone https://github.com/sinethatiah/BookStore.git
 ```
