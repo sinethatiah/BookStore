@@ -1,6 +1,17 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
+class User(AbstractUser):
+    ROLE_CHOICES = [
+        ('customer', 'Customer'),
+        ('admin', 'Admin'),
+    ]
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
+    phone_number = models.CharField(max_length=20, blank=True)
+
+    
 class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
@@ -21,3 +32,4 @@ class Book(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     cover_image_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
