@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 class Category(models.Model):
@@ -26,3 +27,17 @@ class Book(models.Model):
 
     def __str__(self):
         return self.name
+
+class Order(models.Model):
+    DELIVERY_METHOD = [('pickup', 'Pickup'), ('delivery', 'Delivery')]
+    DELIVERY_STATUS = [('pending', 'Pending'), ('dispatched', 'Dispatched'), ('delivered', 'Delivered')]
+    PAYMENT_STATUS = [('pending', 'Pending'), ('paid', 'Paid'), ('failed', 'Failed')]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
+    delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD)
+    delivery_address = models.CharField(max_length=255, blank=True)
+    delivery_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    delivery_status = models.CharField(max_length=20, choices=DELIVERY_STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
