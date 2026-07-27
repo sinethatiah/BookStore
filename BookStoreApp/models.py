@@ -65,3 +65,11 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user} ♥ {self.book.title}"
+    
+class StockNotification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    notified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user} notify for {self.book.title}"
