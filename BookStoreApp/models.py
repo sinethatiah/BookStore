@@ -27,6 +27,12 @@ class Book(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Cart(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Cart ({self.user})"
 
 class Order(models.Model):
     DELIVERY_METHOD = [('pickup', 'Pickup'), ('delivery', 'Delivery')]
