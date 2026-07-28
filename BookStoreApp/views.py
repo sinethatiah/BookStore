@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Book, Category,  Order, OrderItem , Cart , CartItem , Favorite
-from .serializers import BookSerializer, CategorySerializer , OrderSerializer, OrderItemSerializer ,CartSerializer, CartItemSerializer , FavoriteSerializer
+from .models import Book, Category,  Order, OrderItem , Cart , CartItem , Favorite ,StockNotification
+from .serializers import BookSerializer, CategorySerializer , OrderSerializer, OrderItemSerializer ,CartSerializer, CartItemSerializer , FavoriteSerializer , StockNotificationSerializer
 
 # Create your views here.
 
@@ -31,3 +31,6 @@ class OrderItemViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
+class StockNotificationViewSet(viewsets.ModelViewSet):
+    queryset = StockNotification.objects.all()
+    serializer_class = StockNotificationSerializer

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Book , Order, OrderItem , Cart , CartItem ,Favorite
+from .models import Category, Book , Order, OrderItem , Cart , CartItem ,Favorite , StockNotification
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,4 +35,9 @@ class OrderSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
+        fields = '__all__'
+
+class StockNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StockNotification
         fields = '__all__'
