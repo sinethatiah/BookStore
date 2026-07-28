@@ -55,6 +55,14 @@ class Order(models.Model):
     delivery_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     delivery_status = models.CharField(max_length=20, choices=DELIVERY_STATUS, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    price_at_purchase = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.book.title} (Order #{self.order.id})"
 
 class Favorite(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
