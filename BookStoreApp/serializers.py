@@ -45,8 +45,8 @@ class OrderSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
-        fields = '__all__'
-
+        fields = ['id', 'user', 'book']
+        read_only_fields = ['user']
 class StockNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockNotification
