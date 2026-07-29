@@ -64,8 +64,15 @@ class OrderItemViewSet(viewsets.ModelViewSet):
             return OrderItem.objects.all()
         return OrderItem.objects.filter(order__user=self.request.user)
 class FavoriteViewSet(viewsets.ModelViewSet):
-    queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        
 class StockNotificationViewSet(viewsets.ModelViewSet):
     queryset = StockNotification.objects.all()
     serializer_class = StockNotificationSerializer
