@@ -72,7 +72,13 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        
+
 class StockNotificationViewSet(viewsets.ModelViewSet):
-    queryset = StockNotification.objects.all()
     serializer_class = StockNotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return StockNotification.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
