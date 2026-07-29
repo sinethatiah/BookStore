@@ -26,14 +26,22 @@ class CartSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = '__all__'
+        fields = ['id', 'order', 'book', 'quantity', 'price_at_purchase']
+        read_only_fields = ['price_at_purchase']
+
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = [
+            'id', 'user', 'total', 'payment_status',
+            'delivery_method', 'delivery_address', 'delivery_fee',
+            'delivery_status', 'items', 'created_at',
+        ]
+        read_only_fields = ['id', 'user', 'total', 'payment_status', 'delivery_status', 'items', 'created_at']
+
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
