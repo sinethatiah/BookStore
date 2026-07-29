@@ -19,7 +19,8 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = '__all__'
+        fields = ['id', 'user', 'items']
+        read_only_fields = ['user']
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
