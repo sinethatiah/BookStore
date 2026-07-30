@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Book, Category,  Order, OrderItem , Cart , CartItem , Favorite ,StockNotification
 from .serializers import BookSerializer, CategorySerializer , OrderSerializer, OrderItemSerializer ,CartSerializer, CartItemSerializer , FavoriteSerializer , StockNotificationSerializer
 from .permissions import IsAdminRole
+from rest_framework.decorators import action
 # Create your views here.
 
 class BookViewSet(viewsets.ModelViewSet):
@@ -18,7 +19,19 @@ class BookViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
+        if self.action == 'notify_me':
+            return [IsAuthenticated()]
         return [IsAdminRole()]
+
+    @action(detail=True, methods=['post'])
+    def notify_me(self, request, pk=None):
+        book = self.get_object()
+        notification, created = StockNotification.objects.get_or_create(
+            user=request.user, book=book
+        )
+        if created:
+            return Response({'detail': 'You will be notified when this book is back in stock.'}, status=status.HTTP_201_CREATED)
+        return Response({'detail': 'You are already subscribed for this book.'}, status=status.HTTP_200_OK)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
