@@ -1,4 +1,9 @@
 from django.shortcuts import render
+from django.db import transaction
+from decimal import Decimal, InvalidOperation
+from rest_framework.exceptions import ValidationError
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Book, Category,  Order, OrderItem , Cart , CartItem , Favorite ,StockNotification
@@ -55,9 +60,83 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Order.objects.all()
         return Order.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        cart = Cart.objects.filter(user=user).first()
+        if not cart or not cart.items.exists():
+            raise ValidationError({'detail': 'Your cart is empty.'})
 
+        delivery_method = request.data.get('delivery_method')
+        delivery_address = request.data.get('delivery_address', '')
+        delivery_fee_raw = request.data.get('delivery_fee', 0)
+
+        if delivery_method not in ['pickup', 'delivery']:
+            raise ValidationError({'delivery_method': 'Must be "pickup" or "delivery".'})
+
+        # parse delivery_fee to Decimal safely
+        try:
+            delivery_fee = Decimal(str(delivery_fee_raw))
+        except (InvalidOperation, TypeError):
+            raise ValidationError({'delivery_fee': 'Must be a valid decimal number.'})
+        if delivery_fee < 0:
+            raise ValidationError({'delivery_fee': 'Must be non-negative.'})
+
+        with transaction.atomic():
+            # group quantities per book (handles duplicate cart items)
+            cart_items = list(cart.items.select_related('book'))
+            book_qty = {}
+            for ci in cart_items:
+                if ci.quantity <= 0:
+                    raise ValidationError({'quantity': 'Quantity must be a positive integer.'})
+                book_id = ci.book_id
+                book_qty[book_id] = book_qty.get(book_id, 0) + ci.quantity
+
+            # lock all involved book rows in one query
+            book_ids = list(book_qty.keys())
+            books = Book.objects.select_for_update().filter(pk__in=book_ids)
+            books_map = {b.pk: b for b in books}
+            if len(books_map) != len(book_ids):
+                missing = set(book_ids) - set(books_map.keys())
+                raise ValidationError({'detail': f'Books not found: {missing}'})
+
+            total = Decimal('0')
+            for bid, qty in book_qty.items():
+                book = books_map[bid]
+                if book.stock < qty:
+                    raise ValidationError({
+                        'detail': f'Not enough stock for "{book.title}". Only {book.stock} left.'
+                    })
+                total += (book.price * qty)
+
+            total += delivery_fee
+
+            order = Order.objects.create(
+                user=user,
+                total=total,
+                delivery_method=delivery_method,
+                delivery_address=delivery_address,
+                delivery_fee=delivery_fee
+            )
+
+            # create OrderItems and decrement stock
+            for bid, qty in book_qty.items():
+                book = books_map[bid]
+                OrderItem.objects.create(
+                    order=order,
+                    book=book,
+                    quantity=qty,
+                    price_at_purchase=book.price
+                )
+                book.stock -= qty
+                if book.stock <= 0:
+                    book.status = 'out_of_stock'
+                book.save()
+
+            # clear cart
+            cart.items.all().delete()
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class OrderItemViewSet(viewsets.ModelViewSet):
     serializer_class = OrderItemSerializer
