@@ -151,6 +151,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(order)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['patch'])
+    def update_delivery_status(self, request, pk=None):
+        order = self.get_object()
+        new_status = request.data.get('delivery_status')
+
+        valid_statuses = ['pending', 'dispatched', 'delivered']
+        if new_status not in valid_statuses:
+            raise ValidationError({'delivery_status': f'Must be one of {valid_statuses}.'})
+
+        order.delivery_status = new_status
+        order.save()
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 class OrderItemViewSet(viewsets.ModelViewSet):
     serializer_class = OrderItemSerializer
     permission_classes = [IsAuthenticated]
