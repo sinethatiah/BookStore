@@ -15,6 +15,8 @@ from decouple import config
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,8 +31,8 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = []
-
+allowed_hosts_str = config('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',') if host.strip()]
 
 # Application definition
 
@@ -80,14 +82,11 @@ WSGI_APPLICATION = 'BookStore.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config("DATABASE_NAME"),
-        'USER': config("DATABASE_USER"),
-        'PASSWORD': config("DATABASE_PASSWORD"),
-        'HOST': config("DATABASE_HOST"),
-        'PORT': config("DATABASE_PORT")
-    }
+    'default': dj_database_url.config(
+        # Fallback to local SQLite if DATABASE_URL environment variable is missing
+        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+        conn_max_age=600
+    )
 }
 
 cloudinary.config(
