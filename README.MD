@@ -148,6 +148,31 @@ MPESA_CONSUMER_SECRET=
 | Deliveries handled via courier with no visibility on the platform | In-house delivery tracking — order carries delivery method, address, fee, and status (pending / dispatched / delivered), managed by admin |
 
 ## Future Improvements
+## Notifications
+- Actually send notifications (email/SMS) when a book comes back in stock, rather than just recording subscriber interest via `StockNotification`
+- Trigger detection on restock (e.g. override `Book.save()` to detect the `out_of_stock` → `in_stock` transition)
+## Payments
+- Complete a direct M-Pesa (Daraja API) integration for automatic payment verification, replacing the current manual payment instructions
+## Delivery
+- Full end-to-end testing of the delivery status workflow (pending → dispatched → delivered)
+- Real courier API integration for live tracking, if the shop moves beyond in-house delivery management
+- Zone-based delivery fee calculation instead of a flat rate
+## Inventory & Catalog
+- Bulk CSV import for adding books in bulk, with ISBN lookup (Google Books/Open Library API) to auto-fill title, author, and cover image
+- Secondhand book support with per-copy condition tracking
+- Admin tool for logging social-media-driven sales directly against the same stock pool
+## Checkout & Accounts
+- Guest checkout (order without creating an account), with delivery contact fields captured directly on the order
+- Password reset / forgot password flow
+## Media
+- Full Cloudinary integration for book cover uploads (currently a plain URL field)
+## Testing & Infrastructure
+- Automated tests for checkout logic, permissions, and serializer validation
+- CI pipeline and Docker setup for consistent local development
+- API rate limiting / throttling
+## Discovery
+- Full-text search across the book catalog
+- Basic analytics dashboard for admin (views, top-selling books)
 
 *(To be added)*
 
