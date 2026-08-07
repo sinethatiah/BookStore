@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from .tasks import send_restock_notification
 
 # Create your models here.
 class Category(models.Model):
@@ -27,6 +28,30 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        was_out_of_stock = False
+        if self.pk:
+            old = Book.objects.filter(pk=self.pk).first()
+            was_out_of_stock = old is not None and old.stock == 0
+
+        if self.stock > 0 and self.status == 'out_of_stock':
+            self.status = 'in_stock'
+        elif self.stock == 0:
+            self.status = 'out_of_stock'
+
+        super().save(*args, **kwargs)
+
+        if was_out_of_stock and self.stock > 0:
+            self.notify_subscribers()
+
+    def notify_subscribers(self):
+        notifications = StockNotification.objects.filter(book=self, notified=False)
+        for n in notifications:
+            if n.user.email:
+                send_restock_notification.delay(n.user.email, n.user.username, self.title, self.author)
+            n.notified = True
+            n.save()
     
 class Cart(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
