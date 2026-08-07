@@ -1,3 +1,24 @@
+# Virtual environment
 /myenv
+backend/myenv
+
+# Environment variables
 .env
+backend/.env
+
+# Database
 db.sqlite3
+backend/db.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+
+# Django
+*.log
+
+# React (once frontend exists)
+frontend/node_modules
+frontend/build
+frontend/.env
+
