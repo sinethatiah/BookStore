@@ -22,7 +22,7 @@ function BookListing() {
     const fetchCategories = async () => {
       try {
         const response = await categoryService.getCategories();
-        setCategories(response.data);
+        setCategories(response.data.results);
       } catch (err) {
         console.error('Failed to fetch categories', err);
       }
@@ -32,22 +32,22 @@ function BookListing() {
 
   // Fetch books based on filters
   useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const response = await bookService.getBooks(filters);
-        setBooks(response.data);
-      } catch (err) {
-        setError('Failed to fetch books. Please try again.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBooks = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await bookService.getBooks(filters);
+      setBooks(response.data.results);
+    } catch (err) {
+      setError('Failed to fetch books. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchBooks();
-  }, [filters]);
+  fetchBooks();
+}, [filters]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
