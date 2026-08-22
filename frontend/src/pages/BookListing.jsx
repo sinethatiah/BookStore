@@ -19,16 +19,17 @@ function BookListing() {
 
   // Fetch categories on mount
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await categoryService.getCategories();
-        setCategories(response.data.results);
-      } catch (err) {
-        console.error('Failed to fetch categories', err);
-      }
-    };
-    fetchCategories();
-  }, []);
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getCategories();
+      console.log('CATEGORIES:', response.data.results);
+      setCategories(response.data.results);
+    } catch (err) {
+      console.error('Failed to fetch categories', err);
+    }
+  };
+  fetchCategories();
+}, []);
 
   // Fetch books based on filters
   useEffect(() => {
