@@ -163,3 +163,12 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Nairobi'
+
+MPESA = {
+    'ENV': os.getenv('MPESA_ENVIRONMENT', 'sandbox'),
+    'CONSUMER_KEY': os.getenv('MPESA_CONSUMER_KEY'),
+    'CONSUMER_SECRET': os.getenv('MPESA_CONSUMER_SECRET'),
+    'SHORTCODE': os.getenv('MPESA_SHORTCODE'),
+    'PASSKEY': os.getenv('MPESA_PASSKEY'),
+    'CALLBACK_URL': os.getenv('MPESA_CALLBACK_URL'),
+}
