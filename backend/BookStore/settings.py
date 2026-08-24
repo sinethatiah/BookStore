@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework',
     'django_celery_results',
+    'payments',
 ]
 
 MIDDLEWARE = [
