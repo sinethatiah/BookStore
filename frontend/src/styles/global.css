@@ -1,0 +1,70 @@
+:root {
+  --green-dark: #1b3a2b;
+  --green: #2d5a3d;
+  --green-light: #4a7a5c;
+  --cream: #f7f3ea;
+  --black: #14140f;
+  --white: #ffffff;
+  --gray: #6b6b63;
+  --gray-light: #e5e2d9;
+  --error: #c0392b;
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--black);
+}
+
+.loading, .error-message, .empty-cart, .no-results {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--gray);
+}
+
+.error-message {
+  color: var(--error);
+  background: #fdecea;
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.btn-primary, .btn-secondary {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.7rem 1.4rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--green-dark); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--green);
+  color: var(--green);
+}
+.btn-secondary:hover { background: var(--gray-light); }
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-badge.in-stock { background: #e3f3e6; color: var(--green-dark); }
+.status-badge.pre-order { background: #fff3d6; color: #8a6100; }
+.status-badge.out-of-stock { background: #fde3e1; color: var(--error); }
