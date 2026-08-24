@@ -9,10 +9,14 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
+        
 class CartItemSerializer(serializers.ModelSerializer):
+    book_title = serializers.CharField(source='book.title', read_only=True)
+    book_price = serializers.DecimalField(source='book.price', max_digits=8, decimal_places=2, read_only=True)
+
     class Meta:
         model = CartItem
-        fields = ['id', 'cart', 'book', 'quantity']
+        fields = ['id', 'cart', 'book', 'book_title', 'book_price', 'quantity']
         read_only_fields = ['cart']
 
 class CartSerializer(serializers.ModelSerializer):
