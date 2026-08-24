@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db import transaction
 from .mpesa_services import MpesaGateway
 from .models import MpesaTransaction
+from BookStoreApp.models import Order
 
 class InitiatePaymentView(APIView):
     permission_classes = [IsAuthenticated]
@@ -60,11 +61,11 @@ class MpesaCallbackView(APIView):
                         tx.mpesa_receipt_number = item.get('Value')
                         break
 
-                from BookStoreApp.models import Order
+                
                 Order.objects.filter(id=tx.order_id).update(payment_status='paid')
             else:
                 tx.status = MpesaTransaction.StatusChoices.FAILED
-                from BookStoreApp.models import Order
+                
                 Order.objects.filter(id=tx.order_id).update(payment_status='failed')
 
             tx.save()
