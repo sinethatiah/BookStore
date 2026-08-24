@@ -1,4 +1,4 @@
-from django.db import db
+from django.db import transaction
 from django.db import models
 
 class MpesaTransaction(models.Model):
