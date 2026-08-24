@@ -8,7 +8,7 @@ import Register from './pages/Register';
 import Cart from './pages/cart';
 import Checkout from './pages/Checkout';
 // import AdminDashboard from './pages/AdminDashboard'; // build later
-import './App.css';
+
 
 function App() {
   return (
