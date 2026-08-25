@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
-import { AdminRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import BookListing from './pages/BookListing';
 import BookDetail from './pages/BookDetail';
