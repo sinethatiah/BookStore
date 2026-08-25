@@ -36,11 +36,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'total', 'payment_status',
+            'id', 'user', 'username', 'total', 'payment_status',
             'delivery_method', 'delivery_address', 'delivery_fee',
             'delivery_status', 'items', 'created_at',
         ]
