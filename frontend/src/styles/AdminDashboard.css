@@ -1,0 +1,33 @@
+.admin-dashboard {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.admin-dashboard h1 { color: var(--green-dark); }
+
+.admin-orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.admin-orders-table th, .admin-orders-table td {
+  text-align: left;
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--gray-light);
+  font-size: 0.9rem;
+}
+
+.admin-orders-table th {
+  background: var(--gray-light);
+  color: var(--green-dark);
+}
+
+.admin-orders-table select {
+  padding: 0.3rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-light);
+}
