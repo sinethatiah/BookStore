@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
+import { AdminRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import BookListing from './pages/BookListing';
 import BookDetail from './pages/BookDetail';
@@ -8,6 +9,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Cart from './pages/cart';
 import Checkout from './pages/Checkout';
+import AdminDashboard from './pages/AdminDashboard';
+
 
 function App() {
   return (
@@ -21,6 +24,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
