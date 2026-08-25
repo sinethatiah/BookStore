@@ -8,7 +8,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Cart from './pages/cart';
 import Checkout from './pages/Checkout';
-import './App.css';
 
 function App() {
   return (
