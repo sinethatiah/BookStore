@@ -1,33 +1,87 @@
-.admin-dashboard {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.admin-dashboard h1 { color: var(--green-dark); }
+.admin-tabs button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  background: var(--gray-light);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
 
-.admin-orders-table {
+.admin-tabs button.active {
+  background: var(--green);
+  color: var(--white);
+}
+
+.admin-table {
   width: 100%;
   border-collapse: collapse;
   background: var(--white);
   border-radius: var(--radius);
   overflow: hidden;
+  margin-top: 1rem;
 }
 
-.admin-orders-table th, .admin-orders-table td {
+.admin-table th, .admin-table td {
   text-align: left;
   padding: 0.8rem;
   border-bottom: 1px solid var(--gray-light);
   font-size: 0.9rem;
 }
 
-.admin-orders-table th {
-  background: var(--gray-light);
-  color: var(--green-dark);
+.admin-table th { background: var(--gray-light); color: var(--green-dark); }
+
+.stock-input {
+  width: 60px;
+  padding: 0.3rem;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius);
 }
 
-.admin-orders-table select {
-  padding: 0.3rem;
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  background: var(--white);
+  padding: 1.2rem;
   border-radius: var(--radius);
+  margin: 1rem 0;
+  max-width: 400px;
+}
+
+.admin-form input, .admin-form textarea, .admin-form select {
+  padding: 0.6rem;
   border: 1px solid var(--gray-light);
+  border-radius: var(--radius);
+}
+
+.admin-form-inline {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category-list {
+  list-style: none;
+  padding: 0;
+}
+
+.category-list li {
+  background: var(--white);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 0.4rem;
 }
