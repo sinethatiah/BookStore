@@ -85,3 +85,59 @@
   border-radius: var(--radius);
   margin-bottom: 0.4rem;
 }
+.book-search-section {
+  background: var(--white);
+  padding: 1.2rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+
+.book-search-bar {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.book-search-bar input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius);
+}
+
+.search-results {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-result-item {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background: var(--gray-light);
+}
+
+.search-result-item img {
+  width: 40px;
+  height: 55px;
+  object-fit: cover;
+}
+
+.search-result-item p {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+
+.cover-preview {
+  width: 100px;
+  border-radius: var(--radius);
+}
