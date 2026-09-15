@@ -1,0 +1,47 @@
+.my-orders-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.my-orders-page h1 { color: var(--green-dark); }
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.order-card {
+  background: var(--white);
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--black);
+  display: block;
+  transition: box-shadow 0.2s;
+}
+
+.order-card:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--gray);
+  margin-bottom: 0.5rem;
+}
+
+.order-card-body {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.order-card-total {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--green-dark);
+}
