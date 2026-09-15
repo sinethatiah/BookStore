@@ -21,6 +21,7 @@ function Navbar() {
         {user ? (
           <>
             <Link to="/cart">Cart</Link>
+            <Link to="/my-orders">My Orders</Link>
             {isAdmin && <Link to="/admin">Admin</Link>}
             <span className="navbar-user">Hi, {user.username}</span>
             <button className="navbar-logout" onClick={handleLogout}>Logout</button>
