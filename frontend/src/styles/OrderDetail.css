@@ -1,0 +1,50 @@
+.order-detail-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.order-detail-page h1 { color: var(--green-dark); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--green);
+  text-decoration: none;
+}
+
+.order-status-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-badge.payment-paid { background: #e3f3e6; color: var(--green-dark); }
+.status-badge.payment-pending { background: #fff3d6; color: #8a6100; }
+.status-badge.payment-failed { background: #fde3e1; color: var(--error); }
+
+.status-badge.delivery-delivered { background: #e3f3e6; color: var(--green-dark); }
+.status-badge.delivery-dispatched { background: #dce9fb; color: #1a4d8f; }
+.status-badge.delivery-pending { background: var(--gray-light); color: var(--gray); }
+
+.order-items {
+  background: var(--white);
+  padding: 1.2rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+
+.order-item-row, .order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.order-summary-row.total {
+  font-weight: 700;
+  color: var(--green-dark);
+  border-top: 1px solid var(--gray-light);
+  margin-top: 0.5rem;
+  padding-top: 0.8rem;
+}
