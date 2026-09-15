@@ -52,32 +52,36 @@ function Checkout() {
     }
 
     setPlacingOrder(true);
+    let order;
+
     try {
-      // 1. Create the order
       const orderResponse = await orderService.createOrder({
         delivery_method: deliveryMethod,
         delivery_address: deliveryMethod === 'delivery' ? deliveryAddress : '',
         delivery_fee: deliveryMethod === 'delivery' ? 200 : 0,
       });
+      order = orderResponse.data;
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to place order. Please try again.');
+      setPlacingOrder(false);
+      return;
+    }
 
-      const order = orderResponse.data;
+    setPaymentStatus('Order placed! Sending payment request to your phone...');
 
-      // 2. Initiate M-Pesa payment for that order
-      setPaymentStatus('Sending payment request to your phone...');
+    try {
       await paymentService.initiatePayment({
         phone_number: phoneNumber,
         amount: order.total,
         order_id: order.id,
       });
-
       setPaymentStatus('Check your phone to complete the M-Pesa payment.');
-      setTimeout(() => navigate(`/orders/${order.id}`), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Checkout failed. Please try again.');
-      setPaymentStatus('');
-    } finally {
-      setPlacingOrder(false);
+      setPaymentStatus('Order placed, but the payment request failed to send. You can retry payment from your order page.');
     }
+
+    setPlacingOrder(false);
+    setTimeout(() => navigate(`/orders/${order.id}`), 3000);
   };
 
   if (loading) return <div className="loading">Loading checkout...</div>;
