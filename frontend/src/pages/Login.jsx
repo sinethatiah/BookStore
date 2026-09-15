@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import authService from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
 
 function Login() {
@@ -9,6 +9,7 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +17,7 @@ function Login() {
     setLoading(true);
 
     try {
-      await authService.login(username, password);
+      await login(username, password);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || 'Login failed. Please try again.');
@@ -29,9 +30,9 @@ function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <h1>Login</h1>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
