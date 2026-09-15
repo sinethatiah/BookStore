@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.db import transaction
+from django.db import transaction , models
 from decimal import Decimal, InvalidOperation
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
@@ -22,6 +22,23 @@ class BookViewSet(viewsets.ModelViewSet):
         if self.action == 'notify_me':
             return [IsAuthenticated()]
         return [IsAdminRole()]
+
+    def get_queryset(self):
+        queryset = Book.objects.all()
+        search = self.request.query_params.get('search')
+        category = self.request.query_params.get('category')
+        status = self.request.query_params.get('status')
+
+        if search:
+            queryset = queryset.filter(
+                models.Q(title__icontains=search) | models.Q(author__icontains=search)
+            )
+        if category:
+            queryset = queryset.filter(category__id=category)
+        if status:
+            queryset = queryset.filter(status=status)
+
+        return queryset
 
     @action(detail=True, methods=['post'])
     def notify_me(self, request, pk=None):
