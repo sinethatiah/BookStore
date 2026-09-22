@@ -117,21 +117,22 @@ function BooksTab() {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    setSearchResults([]);
-    try {
-      const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=5`
-      );
-      const data = await response.json();
-      setSearchResults(data.items || []);
-    } catch (err) {
-      alert('Search failed. Please try again or enter details manually.');
-    } finally {
-      setSearching(false);
-    }
-  };
+  if (!searchQuery.trim()) return;
+  setSearching(true);
+  setSearchResults([]);
+  try {
+    const apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
+    const response = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=5&key=${apiKey}`
+    );
+    const data = await response.json();
+    setSearchResults(data.items || []);
+  } catch (err) {
+    alert('Search failed. Please try again or enter details manually.');
+  } finally {
+    setSearching(false);
+  }
+};
 
   const handleSelectResult = (item) => {
     const info = item.volumeInfo;
