@@ -6,16 +6,17 @@
 
 .auth-card {
   background: var(--white);
-  padding: 2.5rem;
+  padding: 2.6rem;
   border-radius: var(--radius);
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-md);
 }
 
 .auth-card h1 {
   color: var(--green-dark);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.6rem;
+  font-size: 1.6rem;
 }
 
 .form-group {
@@ -25,16 +26,18 @@
 .form-group label {
   display: block;
   margin-bottom: 0.4rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--gray);
+  font-weight: 500;
 }
 
 .form-group input {
   width: 100%;
-  padding: 0.65rem;
+  padding: 0.68rem;
   border: 1px solid var(--gray-light);
   border-radius: var(--radius);
   font-size: 0.95rem;
+  transition: border-color 0.2s;
 }
 
 .form-group input:focus {
@@ -44,12 +47,12 @@
 
 .auth-card button {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
 }
 
 .auth-link {
-  margin-top: 1.2rem;
-  font-size: 0.9rem;
+  margin-top: 1.4rem;
+  font-size: 0.88rem;
   text-align: center;
   color: var(--gray);
 }
@@ -57,4 +60,5 @@
 .auth-link a {
   color: var(--green);
   text-decoration: none;
+  font-weight: 600;
 }
