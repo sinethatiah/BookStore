@@ -34,6 +34,9 @@ DEBUG = config('DEBUG')
 allowed_hosts_str = config('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',') if host.strip()]
 
+cors_allowed_origins_str = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_allowed_origins_str.split(',') if origin.strip()]
+
 # Application definition
 
 INSTALLED_APPS = [
