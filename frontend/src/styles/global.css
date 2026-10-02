@@ -9,6 +9,8 @@
   --gray-light: #e5e2d9;
   --error: #c0392b;
   --radius: 6px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -22,10 +24,20 @@ body {
   color: var(--black);
 }
 
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
 .loading, .error-message, .empty-cart, .no-results {
   text-align: center;
   padding: 3rem 1rem;
   color: var(--gray);
+}
+
+.empty-cart a {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .error-message {
@@ -40,8 +52,9 @@ body {
   border-radius: var(--radius);
   padding: 0.7rem 1.4rem;
   font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
 }
 
 .btn-primary {
@@ -49,7 +62,8 @@ body {
   color: var(--white);
 }
 .btn-primary:hover { background: var(--green-dark); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   background: transparent;
@@ -60,10 +74,12 @@ body {
 
 .status-badge {
   display: inline-block;
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.7rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 .status-badge.in-stock { background: #e3f3e6; color: var(--green-dark); }
 .status-badge.pre-order { background: #fff3d6; color: #8a6100; }
