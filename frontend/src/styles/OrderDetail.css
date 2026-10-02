@@ -1,16 +1,18 @@
 .order-detail-page {
-  max-width: 700px;
+  max-width: 750px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2.5rem 1.5rem;
 }
 
-.order-detail-page h1 { color: var(--green-dark); }
+.order-detail-page h1 { color: var(--green-dark); margin-bottom: 1rem; }
 
 .back-link {
   display: inline-block;
   margin-bottom: 1rem;
   color: var(--green);
   text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .order-status-row {
@@ -29,9 +31,16 @@
 
 .order-items {
   background: var(--white);
-  padding: 1.2rem;
+  padding: 1.3rem;
   border-radius: var(--radius);
   margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.order-items h3 {
+  margin-top: 0;
+  color: var(--green-dark);
+  font-size: 0.95rem;
 }
 
 .order-item-row, .order-summary-row {
@@ -47,4 +56,5 @@
   border-top: 1px solid var(--gray-light);
   margin-top: 0.5rem;
   padding-top: 0.8rem;
+  font-size: 1.05rem;
 }
