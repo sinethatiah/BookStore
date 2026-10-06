@@ -337,7 +337,9 @@ function BookListing() {
           </div>
         ) : books.length === 0 ? (
           <div className="no-results">
-            <div className="no-results-icon">📚</div>
+            <div className="empty-state-icon">
+  <span className="material-symbols-outlined">menu_book</span>
+</div>
 
             <h3>No books found</h3>
 

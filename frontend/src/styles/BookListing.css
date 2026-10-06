@@ -536,6 +536,22 @@
   margin-bottom: 1.5rem;
   color: var(--gray);
 }
+.empty-state-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  color: var(--green);
+}
+
+.material-symbols-outlined {
+  font-size: 3.5rem;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 48;
+}
 
 @media (max-width: 1000px) {
   .books-grid {
