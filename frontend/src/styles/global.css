@@ -3,35 +3,38 @@
   --green: #2d5a3d;
   --green-light: #4a7a5c;
   --cream: #f7f3ea;
+  --cream-dark: #efe8d8;
   --black: #14140f;
   --white: #ffffff;
   --gray: #6b6b63;
   --gray-light: #e5e2d9;
   --error: #c0392b;
-  --radius: 6px;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+  --shadow-sm: 0 2px 8px rgba(27, 58, 43, 0.08);
+  --shadow-md: 0 8px 24px rgba(27, 58, 43, 0.12);
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--sans);
   background: var(--cream);
   color: var(--black);
 }
 
 h1, h2, h3 {
+  font-family: var(--serif);
   letter-spacing: -0.01em;
 }
 
 .loading, .error-message, .empty-cart, .no-results {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 1rem;
   color: var(--gray);
+  font-size: 0.95rem;
 }
 
 .empty-cart a {
@@ -44,41 +47,42 @@ h1, h2, h3 {
   color: var(--error);
   background: #fdecea;
   border-radius: var(--radius);
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1.1rem;
 }
 
 .btn-primary, .btn-secondary {
   border: none;
   border-radius: var(--radius);
-  padding: 0.7rem 1.4rem;
-  font-size: 0.95rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
   font-weight: 600;
+  font-family: var(--sans);
   cursor: pointer;
-  transition: background 0.2s, opacity 0.2s, transform 0.1s;
+  transition: all 0.2s;
 }
 
 .btn-primary {
-  background: var(--green);
+  background: var(--green-dark);
   color: var(--white);
 }
-.btn-primary:hover { background: var(--green-dark); }
-.btn-primary:active { transform: scale(0.98); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-primary:hover { background: var(--green); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   background: transparent;
-  border: 1px solid var(--green);
-  color: var(--green);
+  border: 1.5px solid var(--green-dark);
+  color: var(--green-dark);
 }
-.btn-secondary:hover { background: var(--gray-light); }
+.btn-secondary:hover { background: var(--green-dark); color: var(--white); }
 
 .status-badge {
   display: inline-block;
-  padding: 0.25rem 0.7rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .status-badge.in-stock { background: #e3f3e6; color: var(--green-dark); }
