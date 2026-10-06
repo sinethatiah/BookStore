@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import bookService from '../services/bookService';
 import cartService from '../services/cartService';
 import '../styles/BookDetail.css';
@@ -16,6 +16,8 @@ function BookDetail() {
   useEffect(() => {
     const fetchBook = async () => {
       setLoading(true);
+      setError('');
+
       try {
         const response = await bookService.getBook(id);
         setBook(response.data);
@@ -25,11 +27,13 @@ function BookDetail() {
         setLoading(false);
       }
     };
+
     fetchBook();
   }, [id]);
 
   const handleAddToCart = async () => {
     setAdding(true);
+
     try {
       await cartService.addToCart(book.id, 1);
       navigate('/cart');
@@ -42,6 +46,7 @@ function BookDetail() {
 
   const handleNotifyMe = async () => {
     setNotifying(true);
+
     try {
       await bookService.notifyMe(book.id);
       alert('You will be notified when this book is back in stock.');
@@ -52,28 +57,45 @@ function BookDetail() {
     }
   };
 
-  if (loading) return <div className="loading">Loading book...</div>;
-  if (error) return <div className="error-message">{error}</div>;
-  if (!book) return null;
+  if (loading) {
+    return <div className="loading">Loading book...</div>;
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
+  if (!book) {
+    return null;
+  }
 
   const formattedPrice = Number(book.price).toLocaleString('en-KE', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 
-  const formattedStatus = book.status ? book.status.replace(/_/g, ' ') : '';
-  const statusClass = book.status ? book.status.replace(/_/g, '-') : '';
+  const formattedStatus = book.status
+    ? book.status.replace(/_/g, ' ')
+    : '';
+
+  const statusClass = book.status
+    ? book.status.replace(/_/g, '-')
+    : '';
 
   return (
     <div className="book-detail-page">
-      <Link to="/" className="back-link">&larr; Back to books</Link>
+      <Link to="/" className="back-link">
+        ← Back to books
+      </Link>
 
       <div className="book-detail-content">
         <div className="book-detail-image">
           {book.cover_image_url ? (
             <img src={book.cover_image_url} alt={book.title} />
           ) : (
-            <div className="no-cover">No cover available</div>
+            <div className="no-cover">
+              {book.title}
+            </div>
           )}
         </div>
 
@@ -85,7 +107,9 @@ function BookDetail() {
             {formattedStatus.toUpperCase()}
           </span>
 
-          <p className="book-detail-price">KSh {formattedPrice}</p>
+          <p className="book-detail-price">
+            KSh {formattedPrice}
+          </p>
 
           {book.description && (
             <div className="book-detail-description">
@@ -96,11 +120,21 @@ function BookDetail() {
 
           <div className="book-detail-actions">
             {book.status === 'out_of_stock' ? (
-              <button className="btn-secondary" onClick={handleNotifyMe} disabled={notifying}>
-                {notifying ? 'Subscribing...' : 'Notify me when in stock'}
+              <button
+                className="btn-secondary"
+                onClick={handleNotifyMe}
+                disabled={notifying}
+              >
+                {notifying
+                  ? 'Subscribing...'
+                  : 'Notify me when in stock'}
               </button>
             ) : (
-              <button className="btn-primary" onClick={handleAddToCart} disabled={adding}>
+              <button
+                className="btn-primary"
+                onClick={handleAddToCart}
+                disabled={adding}
+              >
                 {adding ? 'Adding...' : 'Add to Cart'}
               </button>
             )}
