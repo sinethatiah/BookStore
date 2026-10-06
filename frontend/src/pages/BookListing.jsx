@@ -17,45 +17,38 @@ function BookListing() {
   });
   const [addingToCart, setAddingToCart] = useState(null);
 
-  // Fetch categories on mount
   useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const response = await categoryService.getCategories();
-      console.log('CATEGORIES:', response.data.results);
-      setCategories(response.data.results);
-    } catch (err) {
-      console.error('Failed to fetch categories', err);
-    }
-  };
-  fetchCategories();
-}, []);
+    const fetchCategories = async () => {
+      try {
+        const response = await categoryService.getCategories();
+        setCategories(response.data.results);
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
-  // Fetch books based on filters
   useEffect(() => {
-  const fetchBooks = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await bookService.getBooks(filters);
-      setBooks(response.data.results);
-    } catch (err) {
-      setError('Failed to fetch books. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchBooks();
-}, [filters]);
+    const fetchBooks = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await bookService.getBooks(filters);
+        setBooks(response.data.results);
+      } catch (err) {
+        setError('Failed to fetch books. Please try again.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, [filters]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
 
   const handleAddToCart = async (bookId) => {
@@ -70,6 +63,15 @@ function BookListing() {
     }
   };
 
+  const handleNotifyMe = async (bookId) => {
+    try {
+      await bookService.notifyMe(bookId);
+      alert('You will be notified when this book is back in stock.');
+    } catch (err) {
+      alert('Please log in to get notified.');
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusMap = {
       'in_stock': 'in-stock',
@@ -81,9 +83,24 @@ function BookListing() {
 
   return (
     <div className="book-listing-page">
+      <section className="hero-section">
+        <div className="hero-content">
+          <p className="hero-eyebrow">READ · EXPLORE · GROW</p>
+          <h1 className="hero-title">Stories for a<br />Kinder, Calmer You</h1>
+          <p className="hero-subtitle">
+            Thoughtful reads from Stori Zetu — real stories, real voices, delivered to your door.
+          </p>
+        </div>
+        {books.length > 0 && books[0].cover_image_url && (
+          <div className="hero-book">
+            <img src={books[0].cover_image_url} alt={books[0].title} />
+          </div>
+        )}
+      </section>
+
       <div className="filters-section">
         <h2>Browse Books</h2>
-        
+
         <div className="filters">
           <div className="filter-group">
             <input
@@ -105,9 +122,7 @@ function BookListing() {
             >
               <option value="">All Categories</option>
               {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
           </div>
@@ -143,11 +158,11 @@ function BookListing() {
                   <img src={book.cover_image_url} alt={book.title} />
                 </div>
               )}
-              
+
               <div className="book-info">
                 <h3 className="book-title">{book.title}</h3>
                 <p className="book-author">{book.author}</p>
-                
+
                 <div className="book-meta">
                   <span className={`status-badge ${getStatusBadge(book.status)}`}>
                     {book.status.replace('_', ' ').toUpperCase()}
@@ -156,20 +171,26 @@ function BookListing() {
                     <span className="stock-info">{book.stock} in stock</span>
                   )}
                 </div>
-                
-                <p className="book-price">${book.price}</p>
-                
+
+                <p className="book-price">KSh {book.price}</p>
+
                 <div className="book-actions">
                   <Link to={`/books/${book.id}`} className="btn-secondary">
                     View Details
                   </Link>
-                  <button
-                    onClick={() => handleAddToCart(book.id)}
-                    disabled={book.status === 'out_of_stock' || addingToCart === book.id}
-                    className="btn-primary"
-                  >
-                    {addingToCart === book.id ? 'Adding...' : 'Add to Cart'}
-                  </button>
+                  {book.status === 'out_of_stock' ? (
+                    <button className="btn-secondary" onClick={() => handleNotifyMe(book.id)}>
+                      Notify Me
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAddToCart(book.id)}
+                      disabled={addingToCart === book.id}
+                      className="btn-primary"
+                    >
+                      {addingToCart === book.id ? 'Adding...' : 'Add to Cart'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
