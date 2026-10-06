@@ -56,6 +56,14 @@ function BookDetail() {
   if (error) return <div className="error-message">{error}</div>;
   if (!book) return null;
 
+  const formattedPrice = Number(book.price).toLocaleString('en-KE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const formattedStatus = book.status ? book.status.replace(/_/g, ' ') : '';
+  const statusClass = book.status ? book.status.replace(/_/g, '-') : '';
+
   return (
     <div className="book-detail-page">
       <Link to="/" className="back-link">&larr; Back to books</Link>
@@ -73,11 +81,11 @@ function BookDetail() {
           <h1>{book.title}</h1>
           <p className="book-detail-author">by {book.author}</p>
 
-          <span className={`status-badge ${book.status.replace('_', '-')}`}>
-            {book.status.replace('_', ' ').toUpperCase()}
+          <span className={`status-badge ${statusClass}`}>
+            {formattedStatus.toUpperCase()}
           </span>
 
-          <p className="book-detail-price">KSh {book.price}</p>
+          <p className="book-detail-price">KSh {formattedPrice}</p>
 
           {book.description && (
             <div className="book-detail-description">
