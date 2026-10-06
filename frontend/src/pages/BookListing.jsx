@@ -1,9 +1,70 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import bookService from '../services/bookService';
 import categoryService from '../services/categoryService';
 import cartService from '../services/cartService';
 import '../styles/BookListing.css';
+
+// Reusable Custom Select Component
+function CustomSelect({ options, value, onChange, placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (selectRef.current && !selectRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((opt) => String(opt.value) === String(value));
+  const displayLabel = selectedOption ? selectedOption.label : placeholder;
+
+  return (
+    <div className="custom-select-container" ref={selectRef}>
+      <button
+        type="button"
+        className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{displayLabel}</span>
+        <svg className="select-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+
+      {isOpen && (
+        <ul className="custom-select-menu">
+          <li
+            className={`custom-select-item ${value === '' ? 'selected' : ''}`}
+            onClick={() => {
+              onChange('');
+              setIsOpen(false);
+            }}
+          >
+            {placeholder}
+          </li>
+          {options.map((opt) => (
+            <li
+              key={opt.value}
+              className={`custom-select-item ${String(value) === String(opt.value) ? 'selected' : ''}`}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+            >
+              {opt.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function BookListing() {
   const [books, setBooks] = useState([]);
@@ -44,7 +105,6 @@ function BookListing() {
       }
     };
 
-    // Debounce search input to prevent rapid API calls
     const timeoutId = setTimeout(() => {
       fetchBooks();
     }, 300);
@@ -52,9 +112,13 @@ function BookListing() {
     return () => clearTimeout(timeoutId);
   }, [filters]);
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddToCart = async (bookId) => {
@@ -80,9 +144,9 @@ function BookListing() {
 
   const getStatusBadgeClass = (status) => {
     const statusMap = {
-      'in_stock': 'badge-in-stock',
-      'pre_order': 'badge-pre-order',
-      'out_of_stock': 'badge-out-of-stock',
+      in_stock: 'badge-in-stock',
+      pre_order: 'badge-pre-order',
+      out_of_stock: 'badge-out-of-stock',
     };
     return statusMap[status] || 'badge-default';
   };
@@ -92,16 +156,29 @@ function BookListing() {
     return status.replace(/_/g, ' ').toUpperCase();
   };
 
-  // Find featured hero book (prioritizes items with cover images)
-  const heroBook = books.find(b => b.cover_image_url);
+  const heroBook = books.find((b) => b.cover_image_url);
+
+  // Format options for CustomSelect
+  const categoryOptions = categories.map((cat) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
+
+  const statusOptions = [
+    { value: 'in_stock', label: 'In Stock' },
+    { value: 'pre_order', label: 'Pre-order' },
+    { value: 'out_of_stock', label: 'Out of Stock' },
+  ];
 
   return (
     <div className="book-listing-page">
-      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
           <p className="hero-eyebrow">READ · EXPLORE · GROW</p>
-          <h1 className="hero-title">Stories for a<br />Kinder, Calmer You</h1>
+          <h1 className="hero-title">
+            Stories for a<br />
+            Kinder, Calmer You
+          </h1>
           <p className="hero-subtitle">
             Thoughtful reads from Stori Zetu — real stories, real voices, delivered to your door.
           </p>
@@ -113,7 +190,6 @@ function BookListing() {
         )}
       </section>
 
-      {/* Filter Toolbar Section */}
       <div className="filters-section">
         <h2>Browse Books</h2>
 
@@ -124,54 +200,41 @@ function BookListing() {
               name="search"
               placeholder="Search by title or author..."
               value={filters.search}
-              onChange={handleFilterChange}
+              onChange={handleInputChange}
               className="search-input"
             />
           </div>
 
           <div className="filter-group">
-            <select
-              name="category"
+            <CustomSelect
+              options={categoryOptions}
               value={filters.category}
-              onChange={handleFilterChange}
-              className="filter-select"
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
+              onChange={(val) => handleFilterChange('category', val)}
+              placeholder="All Categories"
+            />
           </div>
 
           <div className="filter-group">
-            <select
-              name="status"
+            <CustomSelect
+              options={statusOptions}
               value={filters.status}
-              onChange={handleFilterChange}
-              className="filter-select"
-            >
-              <option value="">All Status</option>
-              <option value="in_stock">In Stock</option>
-              <option value="pre_order">Pre-order</option>
-              <option value="out_of_stock">Out of Stock</option>
-            </select>
+              onChange={(val) => handleFilterChange('status', val)}
+              placeholder="All Status"
+            />
           </div>
         </div>
       </div>
 
-      {/* Error Feedback */}
       {error && <div className="error-message">{error}</div>}
 
-      {/* Content Area */}
       {loading ? (
         <div className="loading">Loading books...</div>
       ) : books.length === 0 ? (
         <div className="no-results">No books found. Try adjusting your filters.</div>
       ) : (
         <div className="books-grid">
-          {books.map(book => (
+          {books.map((book) => (
             <div key={book.id} className="book-card">
-              {/* Fallback container when cover image is missing */}
               <div className="book-image">
                 {book.cover_image_url ? (
                   <img src={book.cover_image_url} alt={book.title} />
@@ -190,9 +253,7 @@ function BookListing() {
                   <span className={`badge ${getStatusBadgeClass(book.status)}`}>
                     {formatStatusLabel(book.status)}
                   </span>
-                  {book.stock > 0 && (
-                    <span className="stock-info">{book.stock} left</span>
-                  )}
+                  {book.stock > 0 && <span className="stock-info">{book.stock} left</span>}
                 </div>
 
                 <p className="book-price">KSh {book.price}</p>
