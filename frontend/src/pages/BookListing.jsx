@@ -21,7 +21,7 @@ function BookListing() {
     const fetchCategories = async () => {
       try {
         const response = await categoryService.getCategories();
-        setCategories(response.data.results);
+        setCategories(response.data.results || []);
       } catch (err) {
         console.error('Failed to fetch categories', err);
       }
@@ -35,7 +35,7 @@ function BookListing() {
       setError('');
       try {
         const response = await bookService.getBooks(filters);
-        setBooks(response.data.results);
+        setBooks(response.data.results || []);
       } catch (err) {
         setError('Failed to fetch books. Please try again.');
         console.error(err);
@@ -43,7 +43,13 @@ function BookListing() {
         setLoading(false);
       }
     };
-    fetchBooks();
+
+    // Debounce search input to prevent rapid API calls
+    const timeoutId = setTimeout(() => {
+      fetchBooks();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [filters]);
 
   const handleFilterChange = (e) => {
@@ -72,17 +78,26 @@ function BookListing() {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadgeClass = (status) => {
     const statusMap = {
-      'in_stock': 'in-stock',
-      'pre_order': 'pre-order',
-      'out_of_stock': 'out-of-stock',
+      'in_stock': 'badge-in-stock',
+      'pre_order': 'badge-pre-order',
+      'out_of_stock': 'badge-out-of-stock',
     };
-    return statusMap[status] || status;
+    return statusMap[status] || 'badge-default';
   };
+
+  const formatStatusLabel = (status) => {
+    if (!status) return '';
+    return status.replace(/_/g, ' ').toUpperCase();
+  };
+
+  // Find featured hero book (prioritizes items with cover images)
+  const heroBook = books.find(b => b.cover_image_url);
 
   return (
     <div className="book-listing-page">
+      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
           <p className="hero-eyebrow">READ · EXPLORE · GROW</p>
@@ -91,22 +106,23 @@ function BookListing() {
             Thoughtful reads from Stori Zetu — real stories, real voices, delivered to your door.
           </p>
         </div>
-        {books.length > 0 && books[0].cover_image_url && (
+        {heroBook && (
           <div className="hero-book">
-            <img src={books[0].cover_image_url} alt={books[0].title} />
+            <img src={heroBook.cover_image_url} alt={heroBook.title} />
           </div>
         )}
       </section>
 
+      {/* Filter Toolbar Section */}
       <div className="filters-section">
         <h2>Browse Books</h2>
 
         <div className="filters">
-          <div className="filter-group">
+          <div className="filter-group flex-1">
             <input
               type="text"
               name="search"
-              placeholder="Search books..."
+              placeholder="Search by title or author..."
               value={filters.search}
               onChange={handleFilterChange}
               className="search-input"
@@ -143,8 +159,10 @@ function BookListing() {
         </div>
       </div>
 
+      {/* Error Feedback */}
       {error && <div className="error-message">{error}</div>}
 
+      {/* Content Area */}
       {loading ? (
         <div className="loading">Loading books...</div>
       ) : books.length === 0 ? (
@@ -153,22 +171,27 @@ function BookListing() {
         <div className="books-grid">
           {books.map(book => (
             <div key={book.id} className="book-card">
-              {book.cover_image_url && (
-                <div className="book-image">
+              {/* Fallback container when cover image is missing */}
+              <div className="book-image">
+                {book.cover_image_url ? (
                   <img src={book.cover_image_url} alt={book.title} />
-                </div>
-              )}
+                ) : (
+                  <div className="book-image-placeholder">
+                    <span>{book.title}</span>
+                  </div>
+                )}
+              </div>
 
               <div className="book-info">
                 <h3 className="book-title">{book.title}</h3>
                 <p className="book-author">{book.author}</p>
 
                 <div className="book-meta">
-                  <span className={`status-badge ${getStatusBadge(book.status)}`}>
-                    {book.status.replace('_', ' ').toUpperCase()}
+                  <span className={`badge ${getStatusBadgeClass(book.status)}`}>
+                    {formatStatusLabel(book.status)}
                   </span>
                   {book.stock > 0 && (
-                    <span className="stock-info">{book.stock} in stock</span>
+                    <span className="stock-info">{book.stock} left</span>
                   )}
                 </div>
 
