@@ -9,6 +9,14 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        is_admin = request and request.user.is_authenticated and request.user.role == 'admin'
+        if not is_admin:
+            data.pop('stock', None)
+        return data
         
 class CartItemSerializer(serializers.ModelSerializer):
     book_title = serializers.CharField(source='book.title', read_only=True)
