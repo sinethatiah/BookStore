@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import cartService from '../services/cartService';
+import bookService from '../services/bookService';
 import '../styles/Cart.css';
 
 function Cart() {
@@ -16,7 +17,32 @@ function Cart() {
     try {
       const response = await cartService.getCart();
       const carts = response.data.results || [];
-      setCart(carts.length > 0 ? carts[0] : null);
+
+      if (carts.length === 0) {
+        setCart(null);
+        return;
+      }
+
+      const cartData = carts[0];
+      const items = await Promise.all(
+        (cartData.items || []).map(async (item) => {
+          try {
+            const bookResponse = await bookService.getBook(item.book);
+            const book = bookResponse.data;
+
+            return {
+              ...item,
+              book_title: book.title,
+              book_author: book.author,
+              cover_image_url: book.cover_image_url
+            };
+          } catch (err) {
+            return item;
+          }
+        })
+      );
+
+      setCart({ ...cartData, items });
     } catch (err) {
       setError('Failed to load cart.');
     } finally {
@@ -56,7 +82,7 @@ function Cart() {
   };
 
   const calculateTotal = () => {
-    if (!cart || !cart.items) return 0;
+    if (!cart?.items) return 0;
     return cart.items.reduce(
       (sum, item) => sum + Number(item.book_price) * item.quantity,
       0
@@ -125,6 +151,9 @@ function Cart() {
 
                   <div className="cart-item-details">
                     <h3 className="cart-item-title">{item.book_title}</h3>
+                    {item.book_author && (
+                      <p className="cart-item-author">by {item.book_author}</p>
+                    )}
                     <p className="cart-item-price">
                       KSh {formatPrice(item.book_price)} each
                     </p>
