@@ -57,31 +57,46 @@ function Cart() {
 
   const calculateTotal = () => {
     if (!cart || !cart.items) return 0;
-    return cart.items.reduce((sum, item) => sum + (Number(item.book_price) * item.quantity), 0);
+    return cart.items.reduce(
+      (sum, item) => sum + Number(item.book_price) * item.quantity,
+      0
+    );
   };
 
-  const formatPrice = (amount) => {
-    return Number(amount).toLocaleString('en-KE', {
+  const formatPrice = (amount) =>
+    Number(amount).toLocaleString('en-KE', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-  };
 
-  if (loading) return <div className="loading"><div className="loading-spinner"></div>Loading cart...</div>;
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        Loading cart...
+      </div>
+    );
+  }
+
   if (error) return <div className="error-message">{error}</div>;
 
   const items = cart?.items || [];
+  const total = calculateTotal();
 
   return (
     <div className="cart-page">
       <div className="cart-header">
         <h1>Your Shopping Cart</h1>
-        <p className="cart-subtitle">{items.length} {items.length === 1 ? 'item' : 'items'} in your bag</p>
+        <p className="cart-subtitle">
+          {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+        </p>
       </div>
 
       {items.length === 0 ? (
         <div className="empty-cart">
-          <div className="empty-cart-icon">🛍️</div>
+          <div className="empty-cart-icon">
+            <span className="material-symbols-outlined">shopping_cart</span>
+          </div>
           <h3>Your cart is currently empty</h3>
           <p>Explore our library and discover your next great read.</p>
           <Link to="/" className="btn-primary">Browse books</Link>
@@ -89,43 +104,56 @@ function Cart() {
       ) : (
         <div className="cart-layout">
           <div className="cart-items-list">
-            {items.map(item => {
+            {items.map((item) => {
               const itemSubtotal = Number(item.book_price) * item.quantity;
               const isBusy = updatingId === item.id;
 
               return (
-                <div key={item.id} className={`cart-item ${isBusy ? 'busy' : ''}`}>
+                <div
+                  key={item.id}
+                  className={`cart-item ${isBusy ? 'busy' : ''}`}
+                >
                   <div className="cart-item-image">
                     {item.cover_image_url ? (
                       <img src={item.cover_image_url} alt={item.book_title} />
                     ) : (
-                      <div className="cart-item-placeholder">{item.book_title?.[0] || 'B'}</div>
+                      <div className="cart-item-placeholder">
+                        {item.book_title?.[0] || 'B'}
+                      </div>
                     )}
                   </div>
 
                   <div className="cart-item-details">
                     <h3 className="cart-item-title">{item.book_title}</h3>
-                    <p className="cart-item-price">KSh {formatPrice(item.book_price)} each</p>
+                    <p className="cart-item-price">
+                      KSh {formatPrice(item.book_price)} each
+                    </p>
 
                     <div className="cart-item-controls">
                       <div className="quantity-picker">
-                        <button 
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(item.id, item.quantity, -1)
+                          }
                           disabled={item.quantity <= 1 || isBusy}
+                          aria-label={`Decrease quantity of ${item.book_title}`}
                         >
                           −
                         </button>
                         <span>{item.quantity}</span>
-                        <button 
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(item.id, item.quantity, 1)
+                          }
                           disabled={isBusy}
+                          aria-label={`Increase quantity of ${item.book_title}`}
                         >
                           +
                         </button>
                       </div>
 
-                      <button 
-                        className="remove-btn" 
+                      <button
+                        className="remove-btn"
                         onClick={() => handleRemove(item.id)}
                         disabled={isBusy}
                       >
@@ -136,7 +164,9 @@ function Cart() {
 
                   <div className="cart-item-subtotal">
                     <span className="subtotal-label">Subtotal</span>
-                    <span className="subtotal-amount">KSh {formatPrice(itemSubtotal)}</span>
+                    <span className="subtotal-amount">
+                      KSh {formatPrice(itemSubtotal)}
+                    </span>
                   </div>
                 </div>
               );
@@ -148,7 +178,7 @@ function Cart() {
 
             <div className="summary-row">
               <span>Items Total</span>
-              <span>KSh {formatPrice(calculateTotal())}</span>
+              <span>KSh {formatPrice(total)}</span>
             </div>
 
             <div className="summary-row">
@@ -160,11 +190,11 @@ function Cart() {
 
             <div className="summary-row total-row">
               <span>Subtotal</span>
-              <span>KSh {formatPrice(calculateTotal())}</span>
+              <span>KSh {formatPrice(total)}</span>
             </div>
 
-            <button 
-              className="btn-primary checkout-btn" 
+            <button
+              className="btn-primary checkout-btn"
               onClick={() => navigate('/checkout')}
             >
               Proceed to Checkout
