@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import cartService from "../services/cartService";
-import bookService from "../services/bookService";
 import "../styles/Cart.css";
 
 function Cart() {
