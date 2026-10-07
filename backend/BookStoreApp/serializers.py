@@ -20,11 +20,22 @@ class BookSerializer(serializers.ModelSerializer):
         
 class CartItemSerializer(serializers.ModelSerializer):
     book_title = serializers.CharField(source='book.title', read_only=True)
+    book_author = serializers.CharField(source='book.author', read_only=True)
     book_price = serializers.DecimalField(source='book.price', max_digits=8, decimal_places=2, read_only=True)
+    cover_image_url = serializers.CharField(source='book.cover_image_url', read_only=True)
 
     class Meta:
         model = CartItem
-        fields = ['id', 'cart', 'book', 'book_title', 'book_price', 'quantity']
+        fields = [
+            'id',
+            'cart',
+            'book',
+            'book_title',
+            'book_author',
+            'book_price',
+            'cover_image_url',
+            'quantity'
+        ]
         read_only_fields = ['cart']
 
 class CartSerializer(serializers.ModelSerializer):
