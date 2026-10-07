@@ -7,6 +7,7 @@ function Cart() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [updatingId, setUpdatingId] = useState(null);
   const navigate = useNavigate();
 
   const fetchCart = async () => {
@@ -14,8 +15,7 @@ function Cart() {
     setError('');
     try {
       const response = await cartService.getCart();
-      // Cart list endpoint returns paginated results — user has one cart, so grab the first
-      const carts = response.data.results;
+      const carts = response.data.results || [];
       setCart(carts.length > 0 ? carts[0] : null);
     } catch (err) {
       setError('Failed to load cart.');
@@ -28,68 +28,153 @@ function Cart() {
     fetchCart();
   }, []);
 
-  const handleUpdateQuantity = async (itemId, quantity) => {
-    if (quantity < 1) return;
+  const handleUpdateQuantity = async (itemId, currentQty, delta) => {
+    const newQty = currentQty + delta;
+    if (newQty < 1) return;
+
+    setUpdatingId(itemId);
     try {
-      await cartService.updateQuantity(itemId, quantity);
-      fetchCart();
+      await cartService.updateQuantity(itemId, newQty);
+      await fetchCart();
     } catch (err) {
       alert('Failed to update quantity.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
   const handleRemove = async (itemId) => {
+    setUpdatingId(itemId);
     try {
       await cartService.removeFromCart(itemId);
-      fetchCart();
+      await fetchCart();
     } catch (err) {
       alert('Failed to remove item.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
   const calculateTotal = () => {
     if (!cart || !cart.items) return 0;
-    return cart.items.reduce((sum, item) => sum + item.book_price * item.quantity, 0);
+    return cart.items.reduce((sum, item) => sum + (Number(item.book_price) * item.quantity), 0);
   };
 
-  if (loading) return <div className="loading">Loading cart...</div>;
+  const formatPrice = (amount) => {
+    return Number(amount).toLocaleString('en-KE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  if (loading) return <div className="loading"><div className="loading-spinner"></div>Loading cart...</div>;
   if (error) return <div className="error-message">{error}</div>;
+
+  const items = cart?.items || [];
 
   return (
     <div className="cart-page">
-      <h1>Your Cart</h1>
+      <div className="cart-header">
+        <h1>Your Shopping Cart</h1>
+        <p className="cart-subtitle">{items.length} {items.length === 1 ? 'item' : 'items'} in your bag</p>
+      </div>
 
-      {!cart || cart.items.length === 0 ? (
+      {items.length === 0 ? (
         <div className="empty-cart">
-          <p>Your cart is empty.</p>
-          <Link to="/">Browse books</Link>
+          <div className="empty-cart-icon">🛍️</div>
+          <h3>Your cart is currently empty</h3>
+          <p>Explore our library and discover your next great read.</p>
+          <Link to="/" className="btn-primary">Browse books</Link>
         </div>
       ) : (
-        <>
-          <div className="cart-items">
-            {cart.items.map(item => (
-              <div key={item.id} className="cart-item">
-                <div className="cart-item-info">
-                  <h3>{item.book_title}</h3>
-                  <p>KSh {item.book_price}</p>
+        <div className="cart-layout">
+          <div className="cart-items-list">
+            {items.map(item => {
+              const itemSubtotal = Number(item.book_price) * item.quantity;
+              const isBusy = updatingId === item.id;
+
+              return (
+                <div key={item.id} className={`cart-item ${isBusy ? 'busy' : ''}`}>
+                  <div className="cart-item-image">
+                    {item.cover_image_url ? (
+                      <img src={item.cover_image_url} alt={item.book_title} />
+                    ) : (
+                      <div className="cart-item-placeholder">{item.book_title?.[0] || 'B'}</div>
+                    )}
+                  </div>
+
+                  <div className="cart-item-details">
+                    <h3 className="cart-item-title">{item.book_title}</h3>
+                    <p className="cart-item-price">KSh {formatPrice(item.book_price)} each</p>
+
+                    <div className="cart-item-controls">
+                      <div className="quantity-picker">
+                        <button 
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                          disabled={item.quantity <= 1 || isBusy}
+                        >
+                          −
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button 
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                          disabled={isBusy}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button 
+                        className="remove-btn" 
+                        onClick={() => handleRemove(item.id)}
+                        disabled={isBusy}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="cart-item-subtotal">
+                    <span className="subtotal-label">Subtotal</span>
+                    <span className="subtotal-amount">KSh {formatPrice(itemSubtotal)}</span>
+                  </div>
                 </div>
-                <div className="cart-item-quantity">
-                  <button onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
-                </div>
-                <button className="remove-btn" onClick={() => handleRemove(item.id)}>Remove</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="cart-summary">
-            <p className="cart-total">Total: KSh {calculateTotal()}</p>
-            <button className="btn-primary" onClick={() => navigate('/checkout')}>
+          <div className="cart-summary-card">
+            <h2>Order Summary</h2>
+
+            <div className="summary-row">
+              <span>Items Total</span>
+              <span>KSh {formatPrice(calculateTotal())}</span>
+            </div>
+
+            <div className="summary-row">
+              <span>Delivery</span>
+              <span className="summary-calc">Calculated at checkout</span>
+            </div>
+
+            <div className="summary-divider"></div>
+
+            <div className="summary-row total-row">
+              <span>Subtotal</span>
+              <span>KSh {formatPrice(calculateTotal())}</span>
+            </div>
+
+            <button 
+              className="btn-primary checkout-btn" 
+              onClick={() => navigate('/checkout')}
+            >
               Proceed to Checkout
             </button>
+
+            <Link to="/" className="continue-link">
+              &larr; Continue Shopping
+            </Link>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
