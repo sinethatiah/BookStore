@@ -1,50 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import cartService from '../services/cartService';
-import bookService from '../services/bookService';
-import '../styles/Cart.css';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import cartService from "../services/cartService";
+import bookService from "../services/bookService";
+import "../styles/Cart.css";
 
 function Cart() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
   const navigate = useNavigate();
 
   const fetchCart = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const response = await cartService.getCart();
       const carts = response.data.results || [];
-
-      if (carts.length === 0) {
-        setCart(null);
-        return;
-      }
-
-      const cartData = carts[0];
-      const items = await Promise.all(
-        (cartData.items || []).map(async (item) => {
-          try {
-            const bookResponse = await bookService.getBook(item.book);
-            const book = bookResponse.data;
-
-            return {
-              ...item,
-              book_title: book.title,
-              book_author: book.author,
-              cover_image_url: book.cover_image_url
-            };
-          } catch (err) {
-            return item;
-          }
-        })
-      );
-
-      setCart({ ...cartData, items });
+      setCart(carts.length > 0 ? carts[0] : null);
     } catch (err) {
-      setError('Failed to load cart.');
+      setError("Failed to load cart.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +38,7 @@ function Cart() {
       await cartService.updateQuantity(itemId, newQty);
       await fetchCart();
     } catch (err) {
-      alert('Failed to update quantity.');
+      alert("Failed to update quantity.");
     } finally {
       setUpdatingId(null);
     }
@@ -75,7 +50,7 @@ function Cart() {
       await cartService.removeFromCart(itemId);
       await fetchCart();
     } catch (err) {
-      alert('Failed to remove item.');
+      alert("Failed to remove item.");
     } finally {
       setUpdatingId(null);
     }
@@ -85,14 +60,14 @@ function Cart() {
     if (!cart?.items) return 0;
     return cart.items.reduce(
       (sum, item) => sum + Number(item.book_price) * item.quantity,
-      0
+      0,
     );
   };
 
   const formatPrice = (amount) =>
-    Number(amount).toLocaleString('en-KE', {
+    Number(amount).toLocaleString("en-KE", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     });
 
   if (loading) {
@@ -114,7 +89,7 @@ function Cart() {
       <div className="cart-header">
         <h1>Your Shopping Cart</h1>
         <p className="cart-subtitle">
-          {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+          {items.length} {items.length === 1 ? "item" : "items"} in your cart
         </p>
       </div>
 
@@ -125,7 +100,9 @@ function Cart() {
           </div>
           <h3>Your cart is currently empty</h3>
           <p>Explore our library and discover your next great read.</p>
-          <Link to="/" className="btn-primary">Browse books</Link>
+          <Link to="/" className="btn-primary">
+            Browse books
+          </Link>
         </div>
       ) : (
         <div className="cart-layout">
@@ -137,14 +114,14 @@ function Cart() {
               return (
                 <div
                   key={item.id}
-                  className={`cart-item ${isBusy ? 'busy' : ''}`}
+                  className={`cart-item ${isBusy ? "busy" : ""}`}
                 >
                   <div className="cart-item-image">
                     {item.cover_image_url ? (
                       <img src={item.cover_image_url} alt={item.book_title} />
                     ) : (
                       <div className="cart-item-placeholder">
-                        {item.book_title?.[0] || 'B'}
+                        {item.book_title?.[0] || "B"}
                       </div>
                     )}
                   </div>
@@ -224,7 +201,7 @@ function Cart() {
 
             <button
               className="btn-primary checkout-btn"
-              onClick={() => navigate('/checkout')}
+              onClick={() => navigate("/checkout")}
             >
               Proceed to Checkout
             </button>
