@@ -64,6 +64,7 @@ function MyOrders() {
   return (
     <div className="my-orders-page">
       <div className="orders-header">
+        <Link to="/" className="back-link">&larr; Back to books</Link>
         <h1>My Orders</h1>
         <p className="orders-subtitle">Track and review your recent book purchases</p>
       </div>
