@@ -103,8 +103,14 @@ function BooksTab() {
         adminService.getAllBooks(),
         adminService.getCategories(),
       ]);
-      setBooks(booksRes.data.results);
-      setCategories(catsRes.data.results);
+      const booksData = booksRes.data?.results || booksRes.data || [];
+      const catsData = catsRes.data?.results || catsRes.data || [];
+      setBooks(Array.isArray(booksData) ? booksData : []);
+      setCategories(Array.isArray(catsData) ? catsData : []);
+    } catch (err) {
+      console.error('Failed to load local inventory:', err);
+      setBooks([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -112,27 +118,70 @@ function BooksTab() {
 
   useEffect(() => { fetchData(); }, []);
 
+  // Robust search function with Open Library fallback on 503
+  const searchBooks = async (query) => {
+    try {
+      // Try Google Books first (without API key to avoid project quota blocks)
+      const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`;
+      const res = await fetch(googleUrl);
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items && data.items.length > 0) return data.items;
+      }
+      throw new Error('Google Books unavailable, switching to Open Library');
+    } catch (googleErr) {
+      console.warn('Google Books failed, falling back to Open Library:', googleErr.message);
+      
+      // Fallback: Open Library API (no 503 rate limits)
+      const openLibUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5`;
+      const res = await fetch(openLibUrl);
+      if (!res.ok) throw new Error('Open Library search failed');
+      
+      const data = await res.json();
+      // Normalize Open Library data structure to match Google Books format expected by handleSelectResult
+      return (data.docs || []).map(doc => ({
+        id: doc.key,
+        volumeInfo: {
+          title: doc.title,
+          authors: doc.author_name ? doc.author_name : ['Unknown author'],
+          industryIdentifiers: doc.isbn ? [{ type: 'ISBN_13', identifier: doc.isbn[0] }] : [],
+          description: '',
+          imageLinks: doc.cover_i ? {
+            thumbnail: `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+          } : {}
+        }
+      }));
+    }
+  };
+
+  // Debounced live search effect
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query || query.length < 3) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const items = await searchBooks(query);
+        setSearchResults(items);
+      } catch (err) {
+        console.error('All book search providers failed:', err);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
-
-  const handleSearch = async () => {
-  if (!searchQuery.trim()) return;
-  setSearching(true);
-  setSearchResults([]);
-  try {
-    const apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
-    const response = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=5&key=${apiKey}`
-    );
-    const data = await response.json();
-    setSearchResults(data.items || []);
-  } catch (err) {
-    alert('Search failed. Please try again or enter details manually.');
-  } finally {
-    setSearching(false);
-  }
-};
 
   const handleSelectResult = (item) => {
     const info = item.volumeInfo;
@@ -146,8 +195,8 @@ function BooksTab() {
       isbn: isbnObj ? isbnObj.identifier : '',
       description: info.description || '',
       price: '',
-      stock: '',
-      category: '',
+      stock: '10',
+      category: categories[0]?.id || '',
       cover_image_url: info.imageLinks?.thumbnail?.replace('http://', 'https://') || '',
     });
     setSearchResults([]);
@@ -163,7 +212,7 @@ function BooksTab() {
       setShowForm(false);
       fetchData();
     } catch (err) {
-      alert('Failed to add book. Check the fields and try again.');
+      alert('Failed to add book. Check fields and try again.');
     }
   };
 
@@ -192,17 +241,18 @@ function BooksTab() {
     <div>
       <div className="book-search-section">
         <h3>Find a book to add</h3>
-        <div className="book-search-bar">
+        <div className="book-search-bar" style={{ position: 'relative' }}>
           <input
             type="text"
-            placeholder="Search by title, author, or ISBN..."
+            placeholder="Type at least 3 characters..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <button className="btn-primary" onClick={handleSearch} disabled={searching}>
-            {searching ? 'Searching...' : 'Search'}
-          </button>
+          {searching && (
+            <span style={{ position: 'absolute', right: '12px', top: '12px', fontSize: '0.8rem', color: 'var(--gray)' }}>
+              Searching...
+            </span>
+          )}
         </div>
 
         {searchResults.length > 0 && (
@@ -222,7 +272,7 @@ function BooksTab() {
         )}
       </div>
 
-      <button className="btn-secondary" onClick={() => setShowForm(!showForm)}>
+      <button className="btn-secondary toggle-btn" onClick={() => setShowForm(!showForm)}>
         {showForm ? 'Cancel' : 'Or add manually'}
       </button>
 
@@ -246,32 +296,34 @@ function BooksTab() {
         </form>
       )}
 
-      <table className="admin-table">
-        <thead>
-          <tr><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr>
-        </thead>
-        <tbody>
-          {books.map(book => (
-            <tr key={book.id}>
-              <td>{book.title}</td>
-              <td>{book.author}</td>
-              <td>KSh {book.price}</td>
-              <td>
-                <input
-                  type="number"
-                  defaultValue={book.stock}
-                  onBlur={(e) => handleStockChange(book.id, e.target.value)}
-                  className="stock-input"
-                />
-              </td>
-              <td>{book.status}</td>
-              <td>
-                <button className="delete-btn" onClick={() => handleDelete(book.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-wrapper">
+        <table className="admin-table">
+          <thead>
+            <tr><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            {books.map(book => (
+              <tr key={book.id}>
+                <td>{book.title}</td>
+                <td>{book.author}</td>
+                <td>KSh {book.price}</td>
+                <td>
+                  <input
+                    type="number"
+                    defaultValue={book.stock}
+                    onBlur={(e) => handleStockChange(book.id, e.target.value)}
+                    className="stock-input"
+                  />
+                </td>
+                <td>{book.status}</td>
+                <td>
+                  <button className="delete-btn" onClick={() => handleDelete(book.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
