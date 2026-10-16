@@ -7,7 +7,7 @@ const adminService = {
     api.patch(`/orders/${orderId}/update_delivery_status/`, { delivery_status: status }),
 
   // Books
-  getAllBooks: () => api.get('/books/'),
+  getAllBooks: () => api.get('/books/', { params: { page_size: 48 } }),
   createBook: (data) => api.post('/books/', data),
   updateBook: (bookId, data) => api.patch(`/books/${bookId}/`, data),
   deleteBook: (bookId) => api.delete(`/books/${bookId}/`),

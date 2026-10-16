@@ -10,11 +10,13 @@ from .models import Book, Category,  Order, OrderItem , Cart , CartItem , Favori
 from .serializers import BookSerializer, CategorySerializer , OrderSerializer, OrderItemSerializer ,CartSerializer, CartItemSerializer , FavoriteSerializer , StockNotificationSerializer
 from .permissions import IsAdminRole
 from rest_framework.decorators import action
+from .pagination import BookPagination
 # Create your views here.
 
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    pagination_class = BookPagination
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -25,9 +27,12 @@ class BookViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Book.objects.all()
-        search = self.request.query_params.get('search')
-        category = self.request.query_params.get('category')
-        status = self.request.query_params.get('status')
+        params = self.request.query_params
+
+        search = params.get('search')
+        category = params.get('category')
+        book_status = params.get('status')
+        ordering = params.get('ordering')
 
         if search:
             queryset = queryset.filter(
@@ -35,8 +40,14 @@ class BookViewSet(viewsets.ModelViewSet):
             )
         if category:
             queryset = queryset.filter(category__id=category)
-        if status:
-            queryset = queryset.filter(status=status)
+        if book_status:
+            queryset = queryset.filter(status=book_status)
+
+        allowed_orderings = {'price', '-price', 'title', '-title', 'created_at', '-created_at'}
+        if ordering in allowed_orderings:
+            queryset = queryset.order_by(ordering)
+        else:
+            queryset = queryset.order_by('-created_at')
 
         return queryset
 

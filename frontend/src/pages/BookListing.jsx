@@ -1,10 +1,11 @@
+import { useState, useEffect, useRef } from 'react';
+import bookService from '../services/bookService';
+import categoryService from '../services/categoryService';
+import cartService from '../services/cartService';
+import BookCard from '../components/BookCard';
+import '../styles/BookListing.css';
 
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import bookService from "../services/bookService";
-import categoryService from "../services/categoryService";
-import cartService from "../services/cartService";
-import "../styles/BookListing.css";
+const PAGE_SIZE = 12;
 
 function CustomSelect({ options, value, onChange, placeholder, label }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,13 +13,19 @@ function CustomSelect({ options, value, onChange, placeholder, label }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (selectRef.current && !selectRef.current.contains(event.target)) {
+      if (
+        selectRef.current &&
+        !selectRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const selectedOption = options.find(
@@ -29,17 +36,18 @@ function CustomSelect({ options, value, onChange, placeholder, label }) {
     <div className="custom-select-container" ref={selectRef}>
       <button
         type="button"
-        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
+        className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
         onClick={() => setIsOpen((previous) => !previous)}
         aria-expanded={isOpen}
         aria-label={label}
       >
         <span>{selectedOption?.label || placeholder}</span>
+
         <svg
           className="select-arrow"
           viewBox="0 0 24 24"
-          width="18"
-          height="18"
+          width="16"
+          height="16"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -54,9 +62,9 @@ function CustomSelect({ options, value, onChange, placeholder, label }) {
           <li>
             <button
               type="button"
-              className={`custom-select-item ${!value ? "selected" : ""}`}
+              className={`custom-select-item ${!value ? 'selected' : ''}`}
               onClick={() => {
-                onChange("");
+                onChange('');
                 setIsOpen(false);
               }}
             >
@@ -69,7 +77,7 @@ function CustomSelect({ options, value, onChange, placeholder, label }) {
               <button
                 type="button"
                 className={`custom-select-item ${
-                  String(value) === String(option.value) ? "selected" : ""
+                  String(value) === String(option.value) ? 'selected' : ''
                 }`}
                 onClick={() => {
                   onChange(option.value);
@@ -86,44 +94,24 @@ function CustomSelect({ options, value, onChange, placeholder, label }) {
   );
 }
 
-function BookCover({ book, hero = false }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const hasCover = Boolean(book.cover_image_url) && !imageFailed;
-
-  return (
-    <div className={hero ? "hero-cover-frame" : "book-cover-frame"}>
-      {hasCover ? (
-        <img
-          src={book.cover_image_url}
-          alt={`${book.title} book cover`}
-          loading={hero ? "eager" : "lazy"}
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <div className="book-image-placeholder">
-          <span className="placeholder-label">STORI ZETU</span>
-          <span className="placeholder-title">{book.title}</span>
-          <span className="placeholder-author">{book.author}</span>
-          <span className="placeholder-rule" />
-        </div>
-      )}
-    </div>
-  );
-}
-
 function BookListing() {
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [cartMessage, setCartMessage] = useState("");
-  const [filters, setFilters] = useState({
-    search: "",
-    category: "",
-    status: "",
-  });
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [addingToCart, setAddingToCart] = useState(null);
+
   const messageTimer = useRef(null);
+
+  const [filters, setFilters] = useState({
+    search: '',
+    category: '',
+    status: '',
+    ordering: '',
+    page: 1,
+  });
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -131,7 +119,7 @@ function BookListing() {
         const response = await categoryService.getCategories();
         setCategories(response.data.results || []);
       } catch (err) {
-        console.error("Failed to fetch categories", err);
+        console.error('Failed to fetch categories', err);
       }
     };
 
@@ -139,20 +127,27 @@ function BookListing() {
   }, []);
 
   useEffect(() => {
-    const timeoutId = setTimeout(async () => {
+    const fetchBooks = async () => {
       setLoading(true);
-      setError("");
+      setError('');
 
       try {
-        const response = await bookService.getBooks(filters);
+        const response = await bookService.getBooks({
+          ...filters,
+          page_size: PAGE_SIZE,
+        });
+
         setBooks(response.data.results || []);
+        setTotalCount(response.data.count || 0);
       } catch (err) {
-        setError("We couldn't load the books. Please try again.");
-        console.error("Failed to fetch books", err);
+        setError('We couldn’t load the books. Please try again.');
+        console.error('Failed to fetch books', err);
       } finally {
         setLoading(false);
       }
-    }, 300);
+    };
+
+    const timeoutId = setTimeout(fetchBooks, 300);
 
     return () => clearTimeout(timeoutId);
   }, [filters]);
@@ -165,15 +160,15 @@ function BookListing() {
     };
   }, []);
 
-  const showMessage = (message) => {
-    setCartMessage(message);
+  const showMessage = (text) => {
+    setMessage(text);
 
     if (messageTimer.current) {
       clearTimeout(messageTimer.current);
     }
 
     messageTimer.current = setTimeout(() => {
-      setCartMessage("");
+      setMessage('');
     }, 3500);
   };
 
@@ -181,29 +176,36 @@ function BookListing() {
     setFilters((previous) => ({
       ...previous,
       [name]: value,
+      page: 1,
     }));
   };
 
-  const handleInputChange = (event) => {
-    handleFilterChange(event.target.name, event.target.value);
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      category: '',
+      status: '',
+      ordering: '',
+      page: 1,
+    });
   };
 
-  const clearFilters = () => {
-    setFilters({ search: "", category: "", status: "" });
+  const goToPage = (page) => {
+    setFilters((previous) => ({ ...previous, page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddToCart = async (bookId) => {
     setAddingToCart(bookId);
-    setCartMessage("");
 
     try {
       await cartService.addToCart(bookId, 1);
-      showMessage("Book added to your cart.");
+      showMessage('Book added to your cart.');
     } catch (err) {
       showMessage(
         err.response?.status === 401
-          ? "Please log in to add books to your cart."
-          : "Couldn't add this book. Please try again."
+          ? 'Please log in to add books to your cart.'
+          : 'Could not add this book. Please try again.'
       );
     } finally {
       setAddingToCart(null);
@@ -213,32 +215,15 @@ function BookListing() {
   const handleNotifyMe = async (bookId) => {
     try {
       await bookService.notifyMe(bookId);
-      showMessage("You'll be notified when this book is back in stock.");
+      showMessage('You’ll be notified when this book is back in stock.');
     } catch (err) {
       showMessage(
         err.response?.status === 401
-          ? "Please log in to get stock notifications."
-          : "Couldn't set up your notification. Please try again."
+          ? 'Please log in to get stock notifications.'
+          : 'Could not set up your notification. Please try again.'
       );
     }
   };
-
-  const getStatusBadgeClass = (status) => {
-    const statusMap = {
-      in_stock: "badge-in-stock",
-      pre_order: "badge-pre-order",
-      out_of_stock: "badge-out-of-stock",
-    };
-
-    return statusMap[status] || "";
-  };
-
-  const formatStatusLabel = (status) =>
-    status
-      ? status.replace(/_/g, " ").replace(/\b\w/g, (letter) =>
-          letter.toUpperCase()
-        )
-      : "Availability unknown";
 
   const categoryOptions = categories.map((category) => ({
     value: category.id,
@@ -246,67 +231,42 @@ function BookListing() {
   }));
 
   const statusOptions = [
-    { value: "in_stock", label: "In Stock" },
-    { value: "pre_order", label: "Pre-order" },
-    { value: "out_of_stock", label: "Out of Stock" },
+    { value: 'in_stock', label: 'In Stock' },
+    { value: 'pre_order', label: 'Pre-order' },
+    { value: 'out_of_stock', label: 'Out of Stock' },
   ];
 
-  const heroBook = books.find((book) => book.cover_image_url) || books[0];
+  const sortOptions = [
+    { value: 'price', label: 'Price: Low to High' },
+    { value: '-price', label: 'Price: High to Low' },
+    { value: 'title', label: 'Title: A to Z' },
+    { value: '-title', label: 'Title: Z to A' },
+  ];
 
-  const formatPrice = (price) =>
-    Number(price).toLocaleString("en-KE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const hasActiveFilters = Boolean(
+    filters.search ||
+    filters.category ||
+    filters.status ||
+    filters.ordering
+  );
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <main className="book-listing-page">
-      <section className="hero-section">
-        <div className="hero-content">
-          <p className="hero-eyebrow">READ · EXPLORE · GROW</p>
-
-          <h1 className="hero-title">
-            Find your next
-            <br />
-            great story.
-          </h1>
-
-          <p className="hero-subtitle">
-            Thoughtful reads, real stories and unforgettable voices —
-            carefully selected by Stori Zetu.
-          </p>
-
-          <a href="#browse-books" className="hero-button">
-            Browse Books <span aria-hidden="true">↓</span>
-          </a>
-        </div>
-
-        {heroBook && (
-          <Link
-            to={`/books/${heroBook.id}`}
-            className="hero-book"
-            aria-label={`Discover ${heroBook.title}`}
-          >
-            <span className="hero-book-label">Featured</span>
-            <BookCover book={heroBook} hero />
-            <span className="hero-book-shadow" />
-          </Link>
-        )}
-      </section>
-
-      <section className="books-section" id="browse-books">
+      <section className="books-section books-section--page">
         <div className="section-heading">
           <div>
             <p className="section-eyebrow">OUR COLLECTION</p>
             <h2>Browse Books</h2>
             <p className="section-description">
-              Find a story worth spending time with.
+              Explore our collection and find your next great read.
             </p>
           </div>
 
           {!loading && (
             <span className="book-count" aria-live="polite">
-              {books.length} {books.length === 1 ? "book" : "books"}
+              {totalCount} {totalCount === 1 ? 'book' : 'books'}
             </span>
           )}
         </div>
@@ -316,8 +276,8 @@ function BookListing() {
             <svg
               className="search-icon"
               viewBox="0 0 24 24"
-              width="19"
-              height="19"
+              width="18"
+              height="18"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -332,7 +292,9 @@ function BookListing() {
               name="search"
               placeholder="Search by title or author..."
               value={filters.search}
-              onChange={handleInputChange}
+              onChange={(event) =>
+                handleFilterChange('search', event.target.value)
+              }
               className="search-input"
               aria-label="Search books by title or author"
             />
@@ -342,7 +304,7 @@ function BookListing() {
             label="Filter by category"
             options={categoryOptions}
             value={filters.category}
-            onChange={(value) => handleFilterChange("category", value)}
+            onChange={(value) => handleFilterChange('category', value)}
             placeholder="All Categories"
           />
 
@@ -350,24 +312,32 @@ function BookListing() {
             label="Filter by availability"
             options={statusOptions}
             value={filters.status}
-            onChange={(value) => handleFilterChange("status", value)}
+            onChange={(value) => handleFilterChange('status', value)}
             placeholder="All Status"
           />
 
-          {(filters.search || filters.category || filters.status) && (
+          <CustomSelect
+            label="Sort books"
+            options={sortOptions}
+            value={filters.ordering}
+            onChange={(value) => handleFilterChange('ordering', value)}
+            placeholder="Newest First"
+          />
+
+          {hasActiveFilters && (
             <button
               type="button"
               className="clear-filters"
               onClick={clearFilters}
             >
-              Clear filters
+              Clear
             </button>
           )}
         </div>
 
-        {cartMessage && (
+        {message && (
           <div className="cart-message" role="status">
-            {cartMessage}
+            {message}
           </div>
         )}
 
@@ -377,7 +347,9 @@ function BookListing() {
             <button
               type="button"
               className="btn-secondary"
-              onClick={() => setFilters((previous) => ({ ...previous }))}
+              onClick={() =>
+                setFilters((previous) => ({ ...previous }))
+              }
             >
               Try again
             </button>
@@ -395,84 +367,56 @@ function BookListing() {
               <span className="material-symbols-outlined">menu_book</span>
             </div>
             <h3>No books found</h3>
-            <p>Try another search or remove some filters.</p>
+            <p>Try adjusting your search or filters.</p>
             <button
               type="button"
-              className="empty-state-button"
+              className="btn-primary"
               onClick={clearFilters}
             >
-              Clear filters
+              Clear Filters
             </button>
           </div>
         ) : (
-          <div className="books-grid">
-            {books.map((book) => (
-              <article key={book.id} className="book-card">
-                <Link
-                  to={`/books/${book.id}`}
-                  className="book-image"
-                  aria-label={`View ${book.title}`}
+          <>
+            <div className="books-grid">
+              {books.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onMessage={showMessage}
+                  onAddToCart={handleAddToCart}
+                  onNotifyMe={handleNotifyMe}
+                  addingToCart={addingToCart === book.id}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <nav className="pagination" aria-label="Pagination">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => goToPage(filters.page - 1)}
+                  disabled={filters.page === 1}
                 >
-                  <BookCover book={book} />
-                </Link>
+                  Previous
+                </button>
 
-                <div className="book-info">
-                  <div className="book-copy">
-                    <h3 className="book-title">
-                      <Link to={`/books/${book.id}`}>{book.title}</Link>
-                    </h3>
-                    <p className="book-author">{book.author}</p>
-                  </div>
+                <span className="pagination-info">
+                  Page {filters.page} of {totalPages}
+                </span>
 
-                  <div className="book-meta">
-                    <span
-                      className={`badge ${getStatusBadgeClass(book.status)}`}
-                    >
-                      {formatStatusLabel(book.status)}
-                    </span>
-
-                    {book.status === "in_stock" && book.stock > 0 && (
-                      <span className="stock-info">
-                        {book.stock} left
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="book-price">KSh {formatPrice(book.price)}</p>
-
-                  <div className="book-actions">
-                    <Link
-                      to={`/books/${book.id}`}
-                      className="btn-secondary"
-                    >
-                      View details
-                    </Link>
-
-                    {book.status === "out_of_stock" ? (
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={() => handleNotifyMe(book.id)}
-                      >
-                        Notify me
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={() => handleAddToCart(book.id)}
-                        disabled={addingToCart === book.id}
-                      >
-                        {addingToCart === book.id
-                          ? "Adding..."
-                          : "Add to cart"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => goToPage(filters.page + 1)}
+                  disabled={filters.page >= totalPages}
+                >
+                  Next
+                </button>
+              </nav>
+            )}
+          </>
         )}
       </section>
     </main>

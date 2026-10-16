@@ -11,6 +11,7 @@ import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import OrderDetail from './pages/OrderDetail';
 import MyOrders from './pages/MyOrders';
+import Home from './pages/Home';
 
 function App() {
   return (
@@ -18,7 +19,6 @@ function App() {
       <Router>
         <Navbar />
         <Routes>
-          <Route path="/" element={<BookListing />} />
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -27,6 +27,8 @@ function App() {
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+          <Route path="/" element={<Home />} />
+          <Route path="/books" element={<BookListing />} />
         </Routes>
       </Router>
     </AuthProvider>
