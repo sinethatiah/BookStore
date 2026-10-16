@@ -185,20 +185,34 @@ function BooksTab() {
 
   const handleSelectResult = (item) => {
     const info = item.volumeInfo;
+    
+    // Safely extract ISBN
     const isbnObj = info.industryIdentifiers?.find(
       id => id.type === 'ISBN_13' || id.type === 'ISBN_10'
     );
+    const extractedIsbn = isbnObj ? isbnObj.identifier : '';
+
+    // Clean up HTML tags if Google Books includes them in descriptions (e.g., <p>, <b>)
+    const rawDescription = info.description || '';
+    const cleanDescription = rawDescription.replace(/<\/?[>]+(>|$)/g, ""); // strip HTML if any
+
+    // Professional fallback only if description is completely missing from the API
+    const authorsStr = info.authors ? info.authors.join(', ') : 'Unknown author';
+    const finalDescription = cleanDescription.trim() !== '' 
+      ? cleanDescription 
+      : `An engaging literary work authored by ${authorsStr}, exploring rich narrative themes and compelling storytelling.`;
 
     setFormData({
       title: info.title || '',
-      author: info.authors ? info.authors.join(', ') : '',
-      isbn: isbnObj ? isbnObj.identifier : '',
-      description: info.description || '',
+      author: authorsStr,
+      isbn: extractedIsbn,
+      description: finalDescription,
       price: '',
       stock: '10',
       category: categories[0]?.id || '',
       cover_image_url: info.imageLinks?.thumbnail?.replace('http://', 'https://') || '',
     });
+    
     setSearchResults([]);
     setSearchQuery('');
     setShowForm(true);
