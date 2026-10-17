@@ -1,116 +1,120 @@
 import { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import {
+  Link,
+  NavLink,
+  useNavigate,
+  useLocation
+} from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Navbar.css';
+import storiZetuLogo from '../assets/stori-zetu-logo.png';
 
 function Navbar() {
-const { user, logout, isAdmin } = useAuth();
-const navigate = useNavigate();
-const location = useLocation();
-const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-useEffect(() => {
-setMenuOpen(false);
-}, [location.pathname]);
-
-useEffect(() => {
-if (!menuOpen) return undefined;
-
-const handleKeyDown = (event) => {
-  if (event.key === 'Escape') {
+  useEffect(() => {
     setMenuOpen(false);
-  }
-};
+  }, [location.pathname]);
 
-document.addEventListener('keydown', handleKeyDown);
+  useEffect(() => {
+    if (!menuOpen) return undefined;
 
-return () => {
-  document.removeEventListener('keydown', handleKeyDown);
-};
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    };
 
-}, [menuOpen]);
+    document.addEventListener('keydown', handleKeyDown);
 
-const handleLogout = () => {
-logout();
-setMenuOpen(false);
-navigate('/');
-};
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuOpen]);
 
-const navLinkClass = ({ isActive }) =>
-`navbar-link${isActive ? ' active' : ''}`;
+  const handleLogout = () => {
+    logout();
+    setMenuOpen(false);
+    navigate('/');
+  };
 
-return (
-<nav className="navbar" aria-label="Main navigation">
-<Link
-to="/"
-className="navbar-logo"
-onClick={() => setMenuOpen(false)}
->
-Stori Zetu
-</Link>
+  const navLinkClass = ({ isActive }) =>
+    `navbar-link${isActive ? ' active' : ''}`;
 
-  <button
-    type="button"
-    className="navbar-menu-toggle"
-    aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-    aria-expanded={menuOpen}
-    aria-controls="navbar-links"
-    onClick={() => setMenuOpen((open) => !open)}
-  >
-    <span aria-hidden="true">{menuOpen ? '×' : '☰'}</span>
-  </button>
+  return (
+    <nav className="navbar" aria-label="Main navigation">
+      <Link to="/" className="navbar-brand">
+        <img
+          src={storiZetuLogo}
+          alt="Stori Zetu Bookstore"
+          className="navbar-logo"
+        />
+      </Link>
 
-  <div
-    id="navbar-links"
-    className={`navbar-links${menuOpen ? ' is-open' : ''}`}
-  >
-    <NavLink to="/" end className={navLinkClass}>
-      Books
-    </NavLink>
+      <button
+        type="button"
+        className="navbar-menu-toggle"
+        aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={menuOpen}
+        aria-controls="navbar-links"
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        <span aria-hidden="true">{menuOpen ? '×' : '☰'}</span>
+      </button>
 
-    {user ? (
-      <>
-        <NavLink to="/cart" className={navLinkClass}>
-          Cart
+      <div
+        id="navbar-links"
+        className={`navbar-links${menuOpen ? ' is-open' : ''}`}
+      >
+        <NavLink to="/" end className={navLinkClass}>
+          Books
         </NavLink>
 
-        <NavLink to="/my-orders" className={navLinkClass}>
-          My Orders
-        </NavLink>
+        {user ? (
+          <>
+            <NavLink to="/cart" className={navLinkClass}>
+              Cart
+            </NavLink>
 
-        {isAdmin && (
-          <NavLink to="/admin" className={navLinkClass}>
-            Admin
-          </NavLink>
+            <NavLink to="/my-orders" className={navLinkClass}>
+              My Orders
+            </NavLink>
+
+            {isAdmin && (
+              <NavLink to="/admin" className={navLinkClass}>
+                Admin
+              </NavLink>
+            )}
+
+            <span className="navbar-user">
+              Hi, {user.username}
+            </span>
+
+            <button
+              type="button"
+              className="navbar-logout"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className={navLinkClass}>
+              Login
+            </NavLink>
+
+            <NavLink to="/register" className="navbar-register">
+              Register
+            </NavLink>
+          </>
         )}
-
-        <span className="navbar-user">
-          Hi, {user.username}
-        </span>
-
-        <button
-          type="button"
-          className="navbar-logout"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
-      </>
-    ) : (
-      <>
-        <NavLink to="/login" className={navLinkClass}>
-          Login
-        </NavLink>
-
-        <NavLink to="/register" className="navbar-register">
-          Register
-        </NavLink>
-      </>
-    )}
-  </div>
-</nav>
-
-);
+      </div>
+    </nav>
+  );
 }
 
 export default Navbar;

@@ -116,6 +116,7 @@ line-height: 1;
 cursor: pointer;
 }
 
+
 .navbar a:focus-visible,
 .navbar button:focus-visible {
   outline: 2px solid #f4efe6;
@@ -187,4 +188,18 @@ margin-top: 0.25rem;
 .navbar *::after {
 transition: none !important;
 }
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.navbar-logo {
+  display: block;
+  width: 150px;
+  height: 55px;
+  object-fit: contain;
 }
