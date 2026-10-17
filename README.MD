@@ -80,21 +80,6 @@ BookStore/
       styles/
 ```
  
-## API Overview
- 
-All routes are under `/api/`.
- 
-| Area | Endpoints |
-|---|---|
-| Auth | `POST auth/register/`, `POST auth/login/`, `POST auth/refresh/`, `GET auth/me/` |
-| Books | `GET books/` (supports `search`, `category`, `status`, `ordering`, `page`), `GET books/:id/`, `POST books/:id/notify_me/` |
-| Categories | `GET categories/` |
-| Cart | `GET cart/`, `POST cart-items/`, `PATCH cart-items/:id/`, `DELETE cart-items/:id/` |
-| Orders | `POST orders/` (checkout), `GET orders/`, `GET orders/:id/` |
-| Favorites | `GET favorites/`, `POST favorites/`, `DELETE favorites/:id/` |
-| Payments | `POST payments/initiate/`, `POST payments/mpesa-callback/` |
-| Admin only | `POST/PATCH/DELETE books/`, `POST categories/`, `PATCH orders/:id/update_delivery_status/` |
- 
 ## Setup Instructions
  
 ### Prerequisites
