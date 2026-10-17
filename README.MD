@@ -189,9 +189,6 @@ npm run dev
  
 The API will be available at `http://127.0.0.1:8000/api/`, and the Django admin at `http://127.0.0.1:8000/admin/`.
  
-## Screenshots
- 
-*(Add once UI is built)*
  
 ## Challenges & Solutions
  
