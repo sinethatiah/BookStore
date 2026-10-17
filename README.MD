@@ -195,9 +195,7 @@ Safaricom must be able to reach your callback URL, so expose your local server w
 ### Deployment
 - **Backend (Render)**: root directory `backend`, build command `pip install -r requirements.txt && python manage.py migrate`, start command `gunicorn BookStore.wsgi:application`. Set every variable from the list above in the service's environment, with `DEBUG=False`, the production `DATABASE_URL`, the Render host in `ALLOWED_HOSTS`, the frontend URL in `CORS_ALLOWED_ORIGINS`, and `MPESA_CALLBACK_URL` pointing at the Render URL.
 - **Frontend (Vercel)**: root directory `frontend`, with `VITE_API_URL` pointing at the Render API.
-## Screenshots
- 
-*(Add screenshots of the catalog, cart, checkout, order tracking and admin dashboard.)*
+
  
 ## Challenges & Solutions
  
