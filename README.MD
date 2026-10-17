@@ -1,141 +1,248 @@
 # Stori Zetu
  
-An online bookstore backend built for a real, operating bookshop — replacing manual Excel-based inventory tracking and disconnected sales channels with a single, reliable system for stock and orders.
+A full-stack online bookstore built for a real, operating bookshop. It replaces manual Excel-based inventory tracking and disconnected sales channels with a single, reliable system for stock, orders and payments.
+ 
+**Live demo**
+- Frontend: https://book-store-livid-beta.vercel.app
+- Backend API: https://bookstore-a1ds.onrender.com/api/
+The backend runs on a free hosting tier and sleeps when idle, so the first request after a quiet period can take up to a minute.
  
 ## Problem Statement
  
-The shop this project is built for currently runs on a patchwork of manual processes:
+The shop this project is built for runs on a patchwork of manual processes:
  
-- Inventory is tracked in Excel, updated only after a sale — leading to inaccurate stock when entry is delayed
-- Sales happen across multiple channels (social media + website) with no shared source of truth
-- Pre-orders exist only as a note in the item description, not a real system state
-- No online payment verification — checkout relies on manual payment instructions
-Stori Zetu addresses these by centralizing stock and order data, so it's accurate regardless of which channel a sale comes through.
- 
+- Inventory is tracked in Excel and updated only after a sale, so stock is wrong whenever entry is delayed
+- Sales happen across several channels (social media and the website) with no shared source of truth
+- Pre-orders exist only as a note in the item description, not as a real system state
+- Payments are not verified online, so checkout relies on manual payment instructions
+- Deliveries leave the shop with no record of their status
 ## Solution
  
-Stori Zetu solves this by giving the shop a single, authoritative system of record for stock and orders — automatically updated the moment a sale is confirmed. Pre-orders are tracked as a real status rather than free text, deliveries are tracked alongside orders instead of being invisible once dispatched, and checkout is built to prevent overselling even when multiple customers try to buy the last copy at once.
+Stori Zetu gives the shop one authoritative system of record for stock and orders. Stock is decremented automatically inside a database transaction when an order is placed. Pre-orders are a real status on each book. Payments are requested through M-Pesa and confirmed by callback, and deliveries are tracked on the order itself. Checkout prevents overselling even when several customers try to buy the last copy at once.
  
 ## Features
  
-### User-Facing
-- Browse and filter books by category
-- Cart and checkout
-- Real-time stock status (in stock / pre-order / out of stock)
-- Notify-me subscription for restock alerts (records interest; sending notifications is a future improvement)
-- Favorites
-### Admin-Facing
-- Stock management (add, edit, adjust)
-- Book listing and categorization
-- Role-based access control (customer vs. admin)
-- Delivery status tracking (mark orders as dispatched / delivered)
+### Customers
+- Landing page and a full catalog with search, category and status filters, sorting and pagination
+- Book detail pages with in stock, pre-order and out of stock status
+- Registration, login and automatic token refresh
+- Cart with quantity updates
+- Checkout with pickup or delivery
+- M-Pesa STK push payment, with a retry option from the order page
+- My Orders and order detail pages showing payment and delivery status
+- Notify Me on out-of-stock books, with an email sent automatically on restock
+### Admin
+- Dashboard with Orders, Books and Categories tabs
+- Update delivery status (pending, dispatched, delivered)
+- Add books by searching Google Books (with an Open Library fallback) so title, author, ISBN, description and cover are filled in automatically
+- Edit stock inline, delete books, add categories
+- Role-based access control (customer and admin)
+### Backend only
+- Favorites API (models and endpoints are built; there is no frontend page yet)
 ## Tech Stack
  
 | Layer | Technology |
 |---|---|
-| Backend | Django (REST API) |
-| Database | PostgreSQL |
+| Frontend | React 18, Vite, React Router, Axios |
+| Backend | Django 6, Django REST Framework |
 | Auth | JWT (djangorestframework-simplejwt) |
-| Version control | Git / GitHub |
+| Database | PostgreSQL |
+| Payments | M-Pesa Daraja API (sandbox), STK push with callback |
+| Background jobs | Celery with Redis (Upstash) |
+| Email | SMTP (Gmail) |
+| Book data | Google Books API, Open Library fallback |
+| Hosting | Render (backend and database), Vercel (frontend) |
+| Version control | Git and GitHub |
  
 ## System Design
  
-The backend (Django) owns the stock record, order state, and catalog data, exposing REST endpoints. Stock changes are applied as atomic database operations using `select_for_update()` inside a transaction, so concurrent checkouts can't push stock below zero. Order totals and item prices are computed server-side, never trusted from client input.
+The React frontend talks to the Django REST API over HTTPS using JWT access and refresh tokens. The backend owns the catalog, stock, orders and payment state.
+ 
+- **Checkout** runs in one database transaction. It locks the affected book rows with `select_for_update()`, validates stock, computes the total on the server, creates the order and its items, decrements stock and clears the cart. If any step fails, nothing is saved.
+- **Payments** are separate from order creation. An order starts with `payment_status=pending`. The M-Pesa callback endpoint updates the transaction record and the order to `paid` or `failed`.
+- **Restock notifications**: when a book's stock goes from zero to positive, `Book.save()` queues one Celery task per subscriber. A worker sends the emails, so saving a book never waits on email delivery.
+- **Permissions**: public read access for books and categories, authenticated and owner-scoped access for carts, orders and favorites, and admin-only writes for the catalog.
+## Project Structure
+ 
+```
+BookStore/
+  backend/
+    BookStore/       project settings, URLs, Celery app
+    BookStoreApp/    books, categories, cart, orders, favorites, notifications
+    accounts/        custom user model with roles
+    payments/        M-Pesa integration
+  frontend/
+    src/
+      components/    Navbar, route guards, shared UI
+      context/       auth state
+      pages/         catalog, detail, cart, checkout, orders, admin
+      services/      API layer
+      styles/
+```
+ 
+## API Overview
+ 
+All routes are under `/api/`.
+ 
+| Area | Endpoints |
+|---|---|
+| Auth | `POST auth/register/`, `POST auth/login/`, `POST auth/refresh/`, `GET auth/me/` |
+| Books | `GET books/` (supports `search`, `category`, `status`, `ordering`, `page`), `GET books/:id/`, `POST books/:id/notify_me/` |
+| Categories | `GET categories/` |
+| Cart | `GET cart/`, `POST cart-items/`, `PATCH cart-items/:id/`, `DELETE cart-items/:id/` |
+| Orders | `POST orders/` (checkout), `GET orders/`, `GET orders/:id/` |
+| Favorites | `GET favorites/`, `POST favorites/`, `DELETE favorites/:id/` |
+| Payments | `POST payments/initiate/`, `POST payments/mpesa-callback/` |
+| Admin only | `POST/PATCH/DELETE books/`, `POST categories/`, `PATCH orders/:id/update_delivery_status/` |
  
 ## Setup Instructions
  
-Clone the repository:
+### Prerequisites
+Python 3.12 or newer, Node.js 18 or newer, and a local PostgreSQL database.
+ 
+### Backend
+ 
 ```bash
 git clone https://github.com/sinethatiah/BookStore.git
 cd BookStore
-```
  
-Create and activate a virtual environment:
-```bash
 python -m venv myenv
-source myenv/bin/activate   # Windows: myenv\Scripts\activate
-```
+source myenv/bin/activate        # Windows: myenv\Scripts\activate
  
-Install dependencies:
-```bash
+cd backend
 pip install -r requirements.txt
 ```
  
-Create a `.env` file in the project root with:
+Create `backend/.env` (no quotes around values):
+ 
 ```
 SECRET_KEY=
 DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
-DATABASE_NAME=
-DATABASE_USER=
-DATABASE_PASSWORD=
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/DATABASE_NAME
+ 
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+ 
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+ 
+CELERY_BROKER_URL=
+ 
+MPESA_ENVIRONMENT=sandbox
+MPESA_CONSUMER_KEY=
+MPESA_CONSUMER_SECRET=
+MPESA_SHORTCODE=
+MPESA_PASSKEY=
+MPESA_CALLBACK_URL=
 ```
  
-Make sure a PostgreSQL database matching `DATABASE_NAME` exists locally before running migrations.
+Notes:
+- If `DATABASE_URL` is missing, Django silently falls back to a local SQLite file. Set it, and confirm the database engine before you create data.
+- Settings read every key above at startup, so the app will not start if one is missing.
+- `EMAIL_HOST_PASSWORD` must be a Gmail app password, not your normal password.
+- `CELERY_BROKER_URL` is a Redis URL. Upstash provides one on its free tier and requires the `rediss://` scheme.
+Create the database, then run:
  
-Run migrations:
 ```bash
 python manage.py migrate
-```
- 
-Create a superuser (for admin access):
-```bash
 python manage.py createsuperuser
-```
- 
-Start the development server:
-```bash
 python manage.py runserver
 ```
  
-The API will be available at `http://127.0.0.1:8000/api/`, and the Django admin at `http://127.0.0.1:8000/admin/`.
+Plain `createsuperuser` gives the account the customer role. To use the admin dashboard, set the role afterwards:
  
+```bash
+python manage.py shell -c "from accounts.models import User; User.objects.filter(username='YOURUSERNAME').update(role='admin')"
+```
+ 
+Start the Celery worker in a second terminal (needed for restock emails):
+ 
+```bash
+celery -A BookStore worker --loglevel=info --pool=solo
+```
+ 
+The API runs at `http://127.0.0.1:8000/api/` and the Django admin at `http://127.0.0.1:8000/admin/`.
+ 
+### Frontend
+ 
+```bash
+cd frontend
+npm install
+```
+ 
+Create `frontend/.env`:
+ 
+```
+VITE_API_URL=http://localhost:8000/api
+VITE_GOOGLE_BOOKS_API_KEY=
+```
+ 
+```bash
+npm run dev
+```
+ 
+The app runs at `http://localhost:3000`.
+ 
+### Testing M-Pesa locally
+Safaricom must be able to reach your callback URL, so expose your local server with a tunnel such as ngrok, add the tunnel host to `ALLOWED_HOSTS`, and set `MPESA_CALLBACK_URL` to `https://YOUR-TUNNEL/api/payments/mpesa-callback/`. Sandbox payments commonly time out and mark the order as failed, which exercises the failure path.
+ 
+### Deployment
+- **Backend (Render)**: root directory `backend`, build command `pip install -r requirements.txt && python manage.py migrate`, start command `gunicorn BookStore.wsgi:application`. Set every variable from the list above in the service's environment, with `DEBUG=False`, the production `DATABASE_URL`, the Render host in `ALLOWED_HOSTS`, the frontend URL in `CORS_ALLOWED_ORIGINS`, and `MPESA_CALLBACK_URL` pointing at the Render URL.
+- **Frontend (Vercel)**: root directory `frontend`, with `VITE_API_URL` pointing at the Render API.
 ## Screenshots
  
-*(Add once UI is built)*
+*(Add screenshots of the catalog, cart, checkout, order tracking and admin dashboard.)*
  
 ## Challenges & Solutions
  
 | Challenge | Solution |
 |---|---|
-| Inaccurate stock from manual Excel tracking | Automatic stock decrement on every confirmed sale |
+| Inaccurate stock from manual Excel tracking | Stock is decremented automatically inside the checkout transaction |
 | Pre-orders indistinguishable from in-stock items | Dedicated status field on each book |
-| Overselling risk during simultaneous checkouts | Atomic stock decrement with row locking (`select_for_update`) inside a database transaction |
-| Permission checks crashing on anonymous requests | Hardened custom permission classes to check `is_authenticated` before checking role |
-| Clients able to tamper with order totals and prices | Locked down serializers so `total`, `price_at_purchase`, and `user` fields are computed server-side and read-only |
-| Migration ordering conflict between custom user app and Django's admin app | Reset database and rebuilt migrations after correctly registering the custom user app before its first migration |
+| Overselling during simultaneous checkouts | Row locking with `select_for_update()` inside a database transaction, with all-or-nothing rollback |
+| Clients able to tamper with totals and prices | Serializers make `total`, `price_at_purchase` and `user` read-only, and the server computes them |
+| Permission checks crashing on anonymous requests | Custom permission classes check `is_authenticated` before reading the role |
+| Order placed but payment fails | Order creation and payment are separate steps; the M-Pesa callback updates payment status, and the order page offers a retry |
+| Restock emails slowing down admin saves | Emails are queued as Celery tasks and sent by a background worker |
+| Browser blocked frontend requests to the deployed API | CORS origins are read from an environment variable instead of a hardcoded list |
+| Migration ordering conflict with the custom user model | Reset the database and rebuilt migrations after registering the custom user app before its first migration |
+| Manually typing book details for every new title | Admin book search auto-fills title, author, ISBN, description and cover |
  
+## Known Limitations
+ 
+- M-Pesa runs against the Daraja sandbox only, so no real money moves
+- The free Render web service sleeps when idle
+- The free Render PostgreSQL database expires after about 90 days and must be recreated or upgraded
+- The Celery worker is not deployed to Render, so restock emails are only sent while a worker is running locally
 ## Future Improvements
  
-### Frontend
-- React frontend to consume this API
-### Notifications
-- Actually send notifications (email/SMS) when a book comes back in stock, rather than just recording subscriber interest via `StockNotification`
-- Trigger detection on restock (e.g. override `Book.save()` to detect the `out_of_stock` → `in_stock` transition)
+### Accounts and Checkout
+- Password reset flow
+- Guest checkout with delivery contact details captured on the order
 ### Payments
-- M-Pesa (Daraja API) integration for automatic payment verification, replacing manual payment instructions
-### Delivery
-- Full end-to-end testing of the delivery status workflow (pending → dispatched → delivered)
-- Real courier API integration for live tracking
-- Zone-based delivery fee calculation instead of a flat rate
-### Inventory & Catalog
-- Bulk CSV import for adding books in bulk, with ISBN lookup (Google Books/Open Library API) to auto-fill title, author, and cover image
-- Secondhand book support with per-copy condition tracking
-- Admin tool for logging social-media-driven sales directly against the same stock pool
-### Checkout & Accounts
-- Guest checkout (order without creating an account), with delivery contact fields captured directly on the order
-- Password reset / forgot password flow
-### Media
-- Cloudinary integration for book cover uploads (currently a plain URL field)
-### Testing & Infrastructure
-- Automated tests for checkout logic, permissions, and serializer validation
-- CI pipeline and Docker setup for consistent local development
-- API rate limiting / throttling
+- Production M-Pesa credentials and a verified paybill or till
+### Notifications and Infrastructure
+- Deploy the Celery worker as its own Render service
+- SMS notifications alongside email
+- Automated tests for checkout, permissions and serializers
+- CI pipeline and Docker setup
+- API rate limiting
+### Catalog and Inventory
+- Favorites page in the frontend
+- Bulk CSV import with ISBN lookup
+- Secondhand books with per-copy condition tracking
+- Admin tool to log social-media sales against the same stock pool
+- Hide exact stock counts from non-admin API responses
+- Cloudinary uploads for cover images (covers are currently stored as URLs)
 ### Discovery
-- Full-text search across the book catalog
-- Basic analytics dashboard for admin (views, top-selling books)
+- AI-assisted book recommendations
+- Admin analytics dashboard (views, top-selling books)
 ## Contributing
  
 Contributions are welcome. If you'd like to contribute or suggest something, feel free to open an issue first so it can be discussed.
