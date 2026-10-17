@@ -1,10 +1,27 @@
 from rest_framework import serializers
 from .models import Category, Book , Order, OrderItem , Cart , CartItem ,Favorite , StockNotification
+from django.utils.text import slugify
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
+        extra_kwargs = {'slug': {'required': False}}
+
+    def validate(self, attrs):
+        if not attrs.get('slug') and attrs.get('name'):
+            attrs['slug'] = slugify(attrs['name'])
+
+        slug = attrs.get('slug')
+        if slug:
+            duplicates = Category.objects.filter(slug=slug)
+            if self.instance:
+                duplicates = duplicates.exclude(pk=self.instance.pk)
+            if duplicates.exists():
+                raise serializers.ValidationError(
+                    {'name': 'A category with this name already exists.'}
+                )
+        return attrs
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book

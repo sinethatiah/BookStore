@@ -346,6 +346,8 @@ function CategoriesTab() {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -361,13 +363,26 @@ function CategoriesTab() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || saving) return;
+
+    setSaving(true);
+    setError('');
+
     try {
-      await adminService.createCategory({ name });
+      await adminService.createCategory({ name: name.trim() });
       setName('');
       fetchCategories();
     } catch (err) {
-      alert('Failed to add category.');
+      const data = err.response?.data;
+      if (err.response?.status === 403) {
+        setError('Your account is not an admin on this server.');
+      } else if (data && typeof data === 'object') {
+        setError(Object.values(data).flat().join(' '));
+      } else {
+        setError('Failed to add category. Please try again.');
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -381,8 +396,12 @@ function CategoriesTab() {
           onChange={(e) => setName(e.target.value)}
           placeholder="New category name"
         />
-        <button type="submit" className="btn-primary">Add</button>
+        <button type="submit" className="btn-primary" disabled={saving}>
+          {saving ? 'Adding...' : 'Add'}
+        </button>
       </form>
+
+      {error && <div className="error-message">{error}</div>}
 
       <ul className="category-list">
         {categories.map(cat => <li key={cat.id}>{cat.name}</li>)}
